@@ -1,0 +1,6 @@
+from qcodes import VisaInstrument
+
+scope=VisaInstrument(name='scope',address='USB0::0x0957::0x179A::MY52161271::0::INSTR')
+
+scope.ask("*IDN?")
+scope.write(":CHANnel3:DISPlay OFF")

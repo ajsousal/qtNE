@@ -1,0 +1,109 @@
+{
+  "Sample name": "Sample Sim.",
+  "Comments": "DAC5=0 mv",
+  
+  "Instruments": { 
+
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDe"],
+			  "DAC number": [2],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["DAC10","DAC11"],
+			  "DAC number": [10, 11],
+			  "gains": [1.0, 1.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			} 
+				},
+					
+	  "Outputs":{
+		  "M3102A":{
+					  "class": "NEtransport",
+					  "component": "digitizer",
+					  "name": "Idc",
+					  "gain": 1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "channel": 1,
+					  "startDAQ": true,
+					  "metaparameters":{
+										"channelInputConfig":
+													{
+													"fullScale": 0.1,
+													"impedance": 0,
+													"coupling": 0
+													},
+										"DAQconfig":
+													{"pointsPerCycle":40000,
+													 "nCycles": -1,
+													 "triggerDelay": 0,
+													 "triggerMode": 0
+													 }
+										} 
+					}
+				}
+			},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+                    "ID": ["VSDe"],
+                    "sweepback": true
+                    },
+      "Step loop":{
+                    "to use": false,	  	
+                    "ID": "DAC10"
+                  },
+	  "Class settings":{
+				  "NEtransport":{
+						"ranges":{
+											"VSDe": {
+													  "begin": 10,
+													  "end": -10,
+													  "stepsize": 0.5},
+											"DAC10": {
+													  "begin": 0,
+													  "end": 0,
+													  "stepsize": 10.0},
+											"DAC11": {
+													  "begin": 0,
+													  "end": 0,
+													  "stepsize": 5.0}								 
+										}
+								}			  							 
+						}			  
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D"
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 0.01}
+}
+
+  

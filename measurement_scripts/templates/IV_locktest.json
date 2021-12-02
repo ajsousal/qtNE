@@ -1,0 +1,122 @@
+{
+  "Sample name": "test WF init",
+  "Comments": "none", 
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+	  "Supporting Instruments": {
+		  "Agilent33250":{
+						"class":"NEtransport",
+						"component":"wf_pulse",
+						"channel": "ch1",
+						"start": true,
+						"sync": "ON",
+						"init":{
+								"trigger_source": "IMM",
+								"trigger_slope": "NEG",
+								
+								"function_type": "SQU",
+								"frequency_mode": "CW",
+								"frequency": 545.0,
+								"phase": 90.0,
+								"amplitude": 5.0,
+								"amplitude_unit": "VPP",
+								"duty_cycle": 50.0,
+								
+								"output_polarity": "NORM",
+								"burst_mode": "N Cycle",
+								"burst_ncycles": "INF",
+								
+								"output_polarity": "NORM",
+								"output": "OFF",
+								"burst_state": "ON"}
+					}
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDe"],
+			  "DAC number": [3],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "init":{
+								"dac_set_sleep": [0.05] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["DAC10", "DAC11"],
+			  "DAC number": [10, 11],
+			  "gains": [5.0, 5.0],
+			  "unit": "mV",
+			  "init":{
+								"dac_set_sleep": [0.05, 0.05] } 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1e-1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "init":{} }
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["DAC10"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": false,	  	
+                    "ID": ["C"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "Voltage ranges": {
+													 "VSDe": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 1},
+													 "DAC10": {
+															"begin": -1,
+															"end": 1,
+															"stepsize": 0.1},
+													 "DAC11": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 10}															
+													}
+								}
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D",
+			"integration delay": 0.0
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 0.01}
+}
