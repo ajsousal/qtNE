@@ -1,5 +1,6 @@
 .vscode/
 measurement_scripts/*
+tmp/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
