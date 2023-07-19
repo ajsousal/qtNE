@@ -37,6 +37,8 @@ from source.tools.safe_thread import Thread
 
 from source.gui.new_measgui import meas_creator
 
+from source.gui.instruments import stationOverview
+
 
 class StationGUI(QtWidgets.QMainWindow):
 
@@ -94,6 +96,9 @@ class StationGUI(QtWidgets.QMainWindow):
         self.JupyterCall = QtWidgets.QPushButton()
         self.JupyterCall.setText('Open Jupyter Notebooks')
 
+        self.StationOverview = QtWidgets.QPushButton()
+        self.StationOverview.setText('Station Setup')
+
         # self.MeasCreator = QtWidgets.QPushButton()
         # self.MeasCreator.setText('Measurement Creator')
 
@@ -107,6 +112,7 @@ class StationGUI(QtWidgets.QMainWindow):
         vertLayout.addWidget(self.MeasQueuer)
         # vertLayout.addWidget(self.MeasCreator)
         vertLayout.addWidget(self.JupyterCall)
+        vertLayout.addWidget(self.StationOverview)
 
         
 
@@ -145,7 +151,7 @@ class StationGUI(QtWidgets.QMainWindow):
         
         # self.MeasCreator.clicked.connect(self.meascreator_callback)
         self.JupyterCall.clicked.connect(self.jupytercall_callback)
-
+        self.StationOverview.clicked.connect(self.stationoverview_callback)
 
 
 ## ------------- Initialize to default user
@@ -284,6 +290,10 @@ class StationGUI(QtWidgets.QMainWindow):
         self.meascreator=meas_creator.MeasurementCreator(self)
         self.meascreator.show()
 
+
+    def stationoverview_callback(self):
+        self.stationoverview=stationOverview.stationOverview(self.station)
+        self.stationoverview.show()
 
     def jupytercall_callback(self):
 
