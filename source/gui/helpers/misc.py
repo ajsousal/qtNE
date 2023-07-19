@@ -1,5 +1,5 @@
 import qcodes
-from . import json_serializer
+# from . import json_serializer # commented on 31/05/2023
 # from . import data_set, data_array
 from qcodes.data import data_set, data_array
 from . import data_set_conversions

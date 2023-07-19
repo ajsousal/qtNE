@@ -39,7 +39,7 @@ def do_start_station():
 
 
 
-def get_shell_files(path, ignore_list):
+def get_shell_files(path, ignore_list=[]):
     ret = []
 
     entries = os.listdir(path)

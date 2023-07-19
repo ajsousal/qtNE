@@ -20,7 +20,8 @@ def _async_raise(tid, exctype):
 class Thread(threading.Thread):
     def _get_my_tid(self):
         """determines this (self's) thread id"""
-        if not self.isAlive():
+        # if not self.isAlive():
+        if not self.is_alive():
             raise threading.ThreadError("the thread is not active")
         
         # do we have it cached?

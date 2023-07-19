@@ -74,18 +74,23 @@ def f_abs(w):
 
 
 
-def f_log(w):
+def f_log(w,axis):
     """The base-10 logarithm of every datapoint."""
     w['name']='logarithm'
-    
+    print(w['xdata'])
     # wout = np.log10(np.abs(w['ydata']))
-    wout = np.log10(np.abs(w['ydata']),out=np.zeros_like(w['ydata']),where=(np.abs(w['ydata'])!=0))
-    w['ydata'] = wout
-    w['label']='log'+r'$_{10}$'+'(abs('+w['processpar']+'))'
-    w['unit']='nA'
+    if axis == 'y':
+        wout = np.log10(np.abs(w['ydata']),out=np.zeros_like(w['ydata']),where=(np.abs(w['ydata'])!=0))
+        w['ydata'] = wout
+        w['label']='log'+r'$_{10}$'+'(abs('+w['processpar']+'))'
+        w['unit']='nA'
+    elif axis == 'x':
+        wout = np.log10(np.abs(w['xdata']),out=np.zeros_like(w['xdata']),where=(np.abs(w['xdata'])!=0))
+        w['xdata'][0][:] = wout
+        # w['label']='log'+r'$_{10}$'+'(abs('+w['processpar']+'))'
+        # w['unit']='nA'
     
     return w
-
 
 
 def f_xderiv(w,method,sigma):
@@ -114,9 +119,15 @@ def f_yderiv(w,method,sigma):
 
     try:
         # sigma=2    
+        print(np.ndim(w['ydata']))
         if method=='numerical':
-            wout= np.diff(w['ydata'],axis=1)#,prepend=w['ydata'][0][0])
+            if np.ndim(w['ydata'])>1:
+                wout= np.diff(w['ydata'],axis=1)#,prepend=w['ydata'][0][0])
+            else:
+                wout= np.diff(w['ydata'])#,prepend=w['ydata'][0][0])
+            
             wout=np.insert(wout,0,wout[0][0],axis=1)        
+        
         elif method=='smooth':
             wout = diffSmooth(w['ydata'], dy='x', sigma=sigma) # dy (str): direction to differentiate in; sigma (float):  parameter for gaussian filter kernel
         w['ydata'] = wout

@@ -5,15 +5,33 @@ import qcodes
 from shutil import copyfile
 from inspect import signature
 
-
+from numpy import array
+from scipy import signal
 
 class NEtransport(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, station, *args, **kwargs):
         # self.station=station
-        self.test_variable = 12353
+        self.station=station # args[0]
 
     # Input/Output instruments
+    
+    class time_machine():
+    
+        _is_physical_instrument = False
+        
+        def __init__(self,station):
+            self.station=station
+            
+        def create_parameter(self,dictionary,index):
+
+            parameter = qcodes.Parameter(
+                dictionary['IDs'][index],
+                label=dictionary['IDs'][index],
+                unit=dictionary['unit'],
+                get_cmd= perf_counter
+            )
+            return parameter
 
     class S3b():
 
@@ -371,6 +389,86 @@ class NEtransport(object):
 
             return parameter
 
+    class MokuScope():
+
+            '''
+            Dictionary for Moku:Pro
+                "component":  instrument name initialized in create_instruments
+                "name": output name (for dataset name)
+                "gain": gain set manually in the IVVI I/V converter (not set in the Keithley)
+                "label": output label (for plotting)
+                "unit": "nA",
+            '''
+
+            _is_physical_instrument = True
+            _driver_path = ''
+
+            _parameter_dictionary = {'ID': str,
+                                     'gain': float,
+                                     'label': str,
+                                     'channel': int,
+                                     'units': str
+                                     }
+
+            def __init__(self, station):
+                # super().__init__()
+                self.station = station
+                # print(self.test_variable)
+
+                
+
+            def create_parameter(self, dictionary):
+                
+                self.i = self.station[dictionary['component']].i
+                timebase_start = dictionary['metaparameters']['timebase'][0]
+                timebase_end = dictionary['metaparameters']['timebase'][1]
+                self.i.set_timebase(timebase_start, timebase_end)
+                trig_mode = dictionary['metaparameters']['trigger_mode']
+                self.i.set_trigger(mode=trig_mode)
+                
+                self.npts_broadcast = (self.i.get_timebase()[list(self.i.get_timebase().keys())[1]]- self.i.get_timebase()[list(self.i.get_timebase().keys())[0]])*self.i.get_samplerate()['sample_rate']
+
+                channel = 'Input'+dictionary['input_ch']
+                ch_source = dictionary['metaparameters']['source_ch']
+                self.i.set_source(ch_source,channel)
+
+                
+                def get_reading_trace(channel,n_avgs):
+                    data_raw = self.i.get_data()
+                    data_array = [array(data_raw['time']), array(data_raw['ch'+dictionary['input_ch']])/dictionary['gain']]
+                    
+                    for i in range(n_avgs-1):
+                        # print(i)
+                        data_raw = self.i.get_data()
+                        data_array[1] += array(data_raw['ch'+dictionary['input_ch']])/dictionary['gain']
+                        
+                    data_array[1]=data_array[1]/n_avgs
+                    
+                    return data_array
+
+                def get_spectra_density(channel,n_avgs, sample_f):
+                    data_timedomain = get_reading_trace(channel,n_avgs)
+                    (f,spc) = signal.periodogram(array(data_timedomain[1])/dictionary['gain'],sample_f,scaling='density')
+                    data_array = [f, spc]
+                    return data_array
+
+                if dictionary['metaparameters']['mode']=='trace':
+                    parameter = qcodes.Parameter(
+                            dictionary['name'],
+                            label=dictionary['label'],
+                            unit=dictionary['unit'],
+                            instrument=self.station[dictionary['component']],
+                            get_cmd=lambda ch=channel, n_avgs=dictionary['metaparameters']['n_avgs']: get_reading_trace(ch,n_avgs)
+                        )     
+                elif dictionary['metaparameters']['mode']=='spectral_density':
+                    parameter = qcodes.Parameter(
+                            dictionary['name'],
+                            label=dictionary['label'],
+                            unit=dictionary['unit'],
+                            instrument=self.station[dictionary['component']],
+                            get_cmd=lambda ch=channel, n_avgs=dictionary['metaparameters']['n_avgs'], sample_f = dictionary['metaparameters']['sampling_frequency']: get_spectra_density(ch,n_avgs, sample_f)
+                        )
+                return parameter
 
 # PI controller - charge sensing
 
@@ -640,7 +738,8 @@ class NEmagnetic(object):
 
     def __init__(self, station, **kwargs):  # ,inputs,outputs=[]):
 
-        from qcodes.math.field_vector import FieldVector as FieldVector
+        # from qcodes.math.field_vector import FieldVector as FieldVector # outdated qcodes 0.11
+        from qcodes.math_utils.field_vector import FieldVector as FieldVector
 
         self.station = station
         # self.inputs=inputs
@@ -656,10 +755,14 @@ class NEmagnetic(object):
 
         self.act_pars = ['r', 'theta', 'phi']
 
+        # print(station)
+        # print(kwargs)
+        
         try:
-            self.master = self.station[kwargs['magnet']]
+            # self.master = self.station[kwargs['magnet']]
+            self.master = self.station[kwargs['vector magnet']]
         except:
-            print('error in retrieving instrument id.')
+            print('error in retrieving instrument id (magnet).')
             pass
 
         def get_polar(self):

@@ -1,9 +1,10 @@
 # from numbers import Number
 from time import perf_counter, sleep
+from custom_loops.NEInstruments import NEtransport
 import source.measurements.measurement_tools as measurement_tools
 from numbers import Number
 import numpy as np
-from os.path import abspath, join
+from os.path import abspath, join, dirname
 
 
 class NELoops():
@@ -175,7 +176,7 @@ class NELoops():
     def Loop_2D_pulsing(self, inner_loop=None, step_par=[], step_vals=[], sweep_par=[], sweep_vals=[], fix_pars=[], fix_vals=[],
                         outputs=[], NErf=[], sweepback=False, subscriber_delay=0, step_delay=0, integration_delay=0, polarity_stabilization=0, averaging_time=0, **kwargs):
 
-        print('Rabi step loop')
+        # print('Rabi step loop')
 
         self.do_step = 1
         self.lenstep = len(step_vals)
@@ -620,27 +621,243 @@ class NELoops():
         import csv
 
         filename = self.datahandle.filename
-        self.datahandle.set_Fixed(fix_pars, fix_vals, NENoise.ramp_rate)
+        self.datahandle.set_Fixed(fix_pars, fix_vals)#, NENoise.ramp_rate)
 
         row = ['time', 'output']
 
-        with open(filename, 'w', newline='\n') as file:
-            writer = csv.writer(file, delimiter='\t')
-            writer.writerow(row)
+        with open(filename,mode='r') as datafile:
+            lines = datafile.readlines()
+
+        # with open(filename, 'w', newline='\n') as file:
+        with open(filename, 'w', newline='\n') as datafile:
+            # datafile.writelines(lines[:-1])
+            # datafile.writelines('# '+str(NEtransport.station['digitizer'].npts_broadcast)+'\n')
+            ## fix labelling x axis
+            datafile.writelines(lines[:-2])
+            datafile.writelines('# '+" \"time\""+" \"Idc\""+"\n")
+            datafile.writelines('# '+str(10/0.1)+'\n')
+        
+            
 
         rows = []
         row = np.zeros(2)
         time_start = perf_counter()
         time = perf_counter()
-        while (time-time_start) < NENoise.int_time:
-            row[0] = time-time_start
+        time_step=0.1
+        n=-1
+        while (time-time_start) < 10:
+            n+=1
+            row[0] = n*time_step
             # just for one output, replace by for loop
             outval = outputs[0].get()
             row[1] = outval
             time = perf_counter()
 
+            # with open(filename, 'w', newline='\n') as datafile:
+            #     datafile.writelines(str(row)+'\n')
             with open(filename, 'a', newline='\n') as file:
                 writer = csv.writer(file, delimiter='\t')
                 writer.writerow(row)
 
         print('Measurements finished. DACs not set to zero!')
+
+
+    def Loop_2D_digitizer(self, inner_loop=None, step_par=[], step_vals=[],
+                sweep_par=[], sweep_vals=[], fix_pars=[], fix_vals=[],
+                outputs=[], sweepback=True, subscriber_delay=0, step_delay=0, integration_delay=0, polarity_stabilization=0,NEtransport=[], **kwargs):  # -- to call only in a nesting
+
+        self.do_step = 1
+        self.lenstep = len(step_vals)
+        self.timeloop = perf_counter()
+        ind_step = 0
+
+        self.datahandle.set_Fixed_nosave(fix_pars, fix_vals)
+
+        import csv
+    
+        # write dacs log
+        
+        filepath=self.datahandle.filedir
+        filedacs='dac_vals_log.txt'
+        with open(join(filepath,filedacs),'w', newline='\n') as file:
+            row=['DAC','value']
+            writer=csv.writer(file,delimiter='\t')
+            writer.writerow(row)
+            for dac_number in range(1,17):
+                row=['dac'+str(dac_number)]
+                dac_val=getattr(NEtransport.station['ivvi'],'dac'+str(dac_number)).get()
+                row.append(dac_val)
+                writer.writerow(row)
+
+        # rewrite data file header
+        
+        # print(NEtransport.station['digitizer'].npts_broadcast)
+
+        with open(join(filepath,'data.dat'),mode='r') as datafile:
+            lines = datafile.readlines()
+
+        with open(join(filepath,'data.dat'), 'w', newline='\n') as datafile: ## TODO this labelling y time axis
+            datafile.writelines(lines[:-1])
+            datafile.writelines('# '+str(self.lenstep)+' '+str(NEtransport.station['digitizer'].npts_broadcast)+'\n')
+        
+        #
+        
+        
+        if 'NErf' in kwargs:
+            if 'averaging_time' in kwargs:
+                averaging_time=kwargs['averaging_time']
+            else:
+                averaging_time=0
+                
+            NErf=kwargs['NErf']
+            # print(NErf)
+            # print(NEtransport)
+        #     try:
+        #         NErf.sequence_cloner(
+        #             abspath(NErf.sequence_pulse_module.__file__), self.datahandle.filedir)
+        #     except:
+        #         print('No sequence to save.')
+            try:
+                NErf.sequence_cloner(abspath(NErf.sequence_pulse_module.__file__), join(
+                    self.datahandle.filedir, 'sequence.py'))
+            except:
+                print('Sequence not saved.')
+
+            for stepv in step_vals:
+
+                # Editable loop structure
+
+                self.datahandle.set_Setp(step_par, stepv, type_par='step')
+
+                seqpars = step_par.get()
+                print('sequence setpoint parameter: '+ str(seqpars))
+                
+                # # sequence function must return total time
+                # _, _ = NErf.sequence_pulse_function(NErf.pulser, **seqpars)
+                
+                # tsequence = NErf.sequence_pulse_function(NErf.pulser, **seqpars)
+                NErf.sequence_pulse_function(NErf.pulser, **seqpars)
+                # kwargs.update({'tsequence': tsequence})
+                # # print(kwargs['tsequence'])
+
+                NErf.pulser.run()
+                print(NErf.pulser.get_state())
+
+                inner_loop(sweep_par=sweep_par, sweep_vals=sweep_vals, fix_pars=fix_pars, fix_vals=fix_vals, outputs=outputs,
+                        subscriber_delay=subscriber_delay, integration_delay=integration_delay, averaging_time=averaging_time, NEtransport=NEtransport, **kwargs)
+
+                NErf.pulser.stop()
+
+                if sweepback:
+                    sweep_vals = sweep_vals[::-1]
+
+                ######################################
+                ind_step += 1
+
+            # NErf.pulser.ch1_state.set(0)
+            # NErf.pulser.ch2_state.set(0)
+            # NErf.pulser.ch3_state.set(0)
+                
+        else:
+            print('not implemented')
+
+            
+
+    def Loop_digitizer_time(self, sweep_par=[], sweep_vals=[], fix_pars=[], fix_vals=[],
+                 outputs=[], subscriber_delay=0, integration_delay=0, averaging_time=0, NEtransport=[], gates_pulse = {}, **kwargs): # tsequence=0, **kwargs):
+        
+        # self.datahandle.probe_out_array(outputs[0]) # valid for one (digitizer) output
+        
+        # print(NEtransport)
+        # print(kwargs)
+        if self.do_step == 0:
+            self.timeloop = perf_counter()
+            self.datahandle.set_Fixed_nosave(fix_pars, fix_vals)
+            
+            import csv
+            
+            # write dacs vals
+            
+            filepath=self.datahandle.filedir
+            filedacs='dac_vals_log.txt'
+            with open(join(filepath,filedacs),'w', newline='\n') as file:
+                row=['DAC','value']
+                writer=csv.writer(file,delimiter='\t')
+                writer.writerow(row)
+                for dac_number in range(1,17):
+                    row=['dac'+str(dac_number)]
+                    dac_val=getattr(NEtransport.station['ivvi'],'dac'+str(dac_number)).get()
+                    row.append(dac_val)
+                    writer.writerow(row)
+
+            # rewrite data file header
+
+            with open(join(filepath,'data.dat'),mode='r') as datafile:
+                lines = datafile.readlines()
+
+            with open(join(filepath,'data.dat'), 'w', newline='\n') as datafile:
+                # datafile.writelines(lines[:-1])
+                # datafile.writelines('# '+str(NEtransport.station['digitizer'].npts_broadcast)+'\n')
+                ## fix labelling x axis
+                datafile.writelines(lines[:-2])
+                datafile.writelines('# '+" \"time\""+" \"Idc\""+"\n")
+                datafile.writelines('# '+str(NEtransport.station['digitizer'].npts_broadcast)+'\n')
+
+        self.datahandle.ref_time=perf_counter()
+
+
+        n_avgs = NEtransport.station['digitizer'].n_avgs_broadcast
+        time_factor = 1/NEtransport.station['digitizer'].facq_broadcast
+        
+        NEtransport.station['digitizer'].core.DAQstart(1)
+        
+
+        
+        for outpar, outind in zip(outputs, range(len(outputs))):
+            self.datahandle.get_out_array(outpar,outind,time_factor,n_avgs)
+    
+        self.datahandle.save_data_db()
+        
+    def Loop_MokuScope_trace(self, sweep_par=[], sweep_vals=[], fix_pars=[], fix_vals=[],
+                 outputs=[], subscriber_delay=0, integration_delay=0, averaging_time=0, NEtransport=[], gates_pulse = {}, **kwargs):
+    
+        if self.do_step == 0:
+                self.timeloop = perf_counter()
+                self.datahandle.set_Fixed_nosave(fix_pars, fix_vals)
+                
+                import csv
+                
+                # write dacs vals
+                
+                filepath=self.datahandle.filedir
+                filedacs='dac_vals_log.txt'
+                with open(join(filepath,filedacs),'w', newline='\n') as file:
+                    row=['DAC','value']
+                    writer=csv.writer(file,delimiter='\t')
+                    writer.writerow(row)
+                    for dac_number in range(1,17):
+                        row=['dac'+str(dac_number)]
+                        dac_val=getattr(NEtransport.station['ivvi'],'dac'+str(dac_number)).get()
+                        row.append(dac_val)
+                        writer.writerow(row)
+
+                # rewrite data file header
+
+                with open(join(filepath,'data.dat'),mode='r') as datafile:
+                    lines = datafile.readlines()
+                
+                
+                # npts_broadcast = (NEtransport.station['mokuscope'].i.get_timebase()[list(NEtransport.station['mokuscope'].i.get_timebase().keys())[1]]- NEtransport.station['mokuscope'].i.get_timebase()[list(NEtransport.station['mokuscope'].i.get_timebase().keys())[0]])*NEtransport.station['mokuscope'].i.get_samplerate()['sample_rate']
+                npts_broadcast = 1024
+                
+                with open(join(filepath,'data.dat'), 'w', newline='\n') as datafile:
+
+                    datafile.writelines(lines[:-2])
+                    datafile.writelines('# '+" \"time\""+" \"Idc\""+"\n")
+                    datafile.writelines('# '+str(npts_broadcast)+'\n')
+                    
+                for outpar, outind in zip(outputs, range(len(outputs))):
+                    self.datahandle.get_out_moku(outpar,outind)
+                    
+                    
+                self.datahandle.save_data_db()

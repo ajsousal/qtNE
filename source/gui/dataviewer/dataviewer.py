@@ -5,23 +5,36 @@ import numpy as np
 import argparse
 import logging
 import os
+import sys
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.Point import Point
+from pyqtgraph.exporters import ImageExporter
 
 
-import qtpy.QtGui as QtGui
+import PyQt6.QtGui as QtGui
+# import PyQt6.QtWidgets as QtWidgets
+from PyQt6.QtWidgets import QFileDialog, QWidget, QApplication
+# import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
-from qtpy.QtWidgets import QFileDialog, QWidget
+# from qtpy.QtWidgets import QFileDialog, QWidget
 
 import qcodes
 
 # from source.gui.helpers.pyqtgraph import QtPlot
-from qcodes.plots.pyqtgraph import QtPlot
+# from qcodes.plots.pyqtgraph import QtPlot
+from source.gui.helpers.pyqtgraph_helper.pyqtgraph import QtPlot
 
 
-from source.gui.helpers import procstyles as procstyles
+try:
+    from source.gui.helpers import procstyles as procstyles
+except:
+    pathit=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+    print(pathit)
+    sys.path.append(pathit) # TO DO: make universal to source
+    from source.gui.helpers import procstyles as procstyles
+
 from source.measurements.data_set_tools import remove_array_clean as remove_array_clean
 from source.measurements.data_set_tools import load_data_generic as load_data_generic
 
@@ -31,25 +44,37 @@ from source.gui.helpers import misc
 # from source.gui.helpers import data_set
 from qcodes.data import data_set
 
-from .dataviewmeta import DataMeta
-from .dataviewprocess import DataProc
-from .dataviewfunctions import DataFuncs
+try:
+    from .dataviewmeta import DataMeta
+    from .dataviewprocess import DataProc
+    from .dataviewfunctions import DataFuncs
+except:
+    from dataviewmeta import DataMeta
+    from dataviewprocess import DataProc
+    from dataviewfunctions import DataFuncs
 
 
 import pickle
 
 
 import weakref
-from pyqtgraph.exporters import ImageExporter
+# from pyqtgraph.exporters import ImageExporter
 
 from tempfile import gettempdir
 
-import h5py
+#import h5py
+
+from datetime import datetime
+
+# import debugpy
+from PyQt6.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
 
 # %% Main class
 
 
-class DataViewer(QtWidgets.QMainWindow):
+class DataViewer(QtWidgets.QMainWindow): # QObject):#
+
+    sig_msg = pyqtSignal(str)  # message to be shown to user
 
     def __init__(self, data_directory=None, window_title='Data browser',
                  default_parameter='amplitude', extensions=None, verbose=1, parent=None):
@@ -64,6 +89,9 @@ class DataViewer(QtWidgets.QMainWindow):
         super(DataViewer, self).__init__(parent)
         if extensions is None:
             extensions = ['dat', 'hdf5']
+
+        
+        # self.start_threads()
 
         self.main = parent
 
@@ -80,6 +108,9 @@ class DataViewer(QtWidgets.QMainWindow):
         self.default_parameter = default_parameter
         self.data_directories = [None] * 2
         self.directory_index = 0
+        
+        # data_directory='C:\qtNE_dbs_2021\Antonio'
+
         if data_directory is None:
             with open(os.path.join(gettempdir(), 'tmp'), "rb") as f:
                 directories = pickle.load(f)
@@ -193,6 +224,8 @@ class DataViewer(QtWidgets.QMainWindow):
         self.logtree.setColumnHidden(3, True)
         self.show()
 
+        
+
         # ----------- process data
 
         self.fqueue = {'identity': [procstyles.f_identity, {}]}
@@ -208,6 +241,8 @@ class DataViewer(QtWidgets.QMainWindow):
                                      [480, 640, 0.4, 0]
                                      ]
 
+
+
     def show_metadata(self):
         if not self.datameta.isVisible():
             self.datameta.show()
@@ -219,10 +254,10 @@ class DataViewer(QtWidgets.QMainWindow):
     def set_data_directory(self, data_directory, index=0):
         self.data_directories[index] = data_directory
         self.data_directory = data_directory
-        try:
-            self.disk_io = qcodes.DiskIO(data_directory)
-        except:
-            self.disk_io = qcodes.data.io.DiskIO(data_directory)
+        # try:
+        #     self.disk_io = qcodes.DiskIO(data_directory)
+        # except:
+        #     self.disk_io = qcodes.data.io.DiskIO(data_directory)
         logging.info('DataViewer: data directory %s' % data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
 
@@ -236,10 +271,10 @@ class DataViewer(QtWidgets.QMainWindow):
         index = (self.directory_index + 1) % len(self.data_directories)
         self.directory_index = index
         self.data_directory = self.data_directories[index]
-        try:
-            self.disk_io = qcodes.DiskIO(self.data_directory)
-        except:
-            self.disk_io = qcodes.data.io.DiskIO(self.data_directory)
+        # try:
+        #     self.disk_io = qcodes.DiskIO(self.data_directory)
+        # except:
+        #     self.disk_io = qcodes.data.io.DiskIO(self.data_directory)
         logging.info('DataViewer: data directory %s' % self.data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
         self.update_logs()
@@ -267,6 +302,22 @@ class DataViewer(QtWidgets.QMainWindow):
                 fig.save(filename=os.path.join(dirname, fname))
         else:
             print('No destination folder selected')
+
+    def jupyter_callback(self):
+
+        from source.gui.helpers import jupyter_helper
+
+        path_jupyternbs = os.path.join(self.data_directory,'jupyter_nbs')
+
+        if not os.path.isdir(path_jupyternbs):
+            os.mkdir(path_jupyternbs)
+
+        jupyter_helper.create_qcodes_nb(self.logtree.currentIndex(),self.data_directory,save_path = path_jupyternbs)
+
+        return
+
+
+
 
     def tojpg_tmp(self):
         if self.dataset is None:
@@ -337,10 +388,20 @@ class DataViewer(QtWidgets.QMainWindow):
                     looptxt, outputtxt, sampletxt, commenttxt = DataViewer.get_data_info(
                         tempdata.metadata)
 
-                    self._treemodel.setData(pp.child(row, 1), sampletxt)
-                    self._treemodel.setData(pp.child(row, 4), looptxt)
-                    self._treemodel.setData(pp.child(row, 5), outputtxt)
-                    self._treemodel.setData(pp.child(row, 6), commenttxt)
+                    # self._treemodel.setData(pp.child(row, 0), index)
+                    # self._treemodel.setData(pp.child(row, 1), sampletxt)
+                    # self._treemodel.setData(pp.child(row, 4), looptxt)
+                    # self._treemodel.setData(pp.child(row, 5), outputtxt)
+                    # self._treemodel.setData(pp.child(row, 6), commenttxt)
+                    # self._treemodel.setData(pp.child(row, 2), sampletxt)
+                    # self._treemodel.setData(pp.child(row, 5), looptxt)
+                    # self._treemodel.setData(pp.child(row, 6), outputtxt)
+                    # self._treemodel.setData(pp.child(row, 7), commenttxt)
+                    self._treemodel.setData(index.sibling(row, 2), sampletxt)
+                    self._treemodel.setData(index.sibling(row, 5), looptxt)
+                    self._treemodel.setData(index.sibling(row, 6), outputtxt)
+                    self._treemodel.setData(index.sibling(row, 7), commenttxt)
+
 
                     i = i + 1
         except Exception as e:
@@ -379,6 +440,74 @@ class DataViewer(QtWidgets.QMainWindow):
             datetag, logtag = filename.split(os.sep)[-3:-1]
         return datetag, logtag
 
+    @staticmethod
+    def _get_db_runids(logs,datetag,cache_file):
+        
+        stop_index = 0 # reset index for searching db 
+        i=0
+        _db_ini=False
+        if os.path.isfile(cache_file):
+            with open(cache_file,'r') as file: #assuming that list will be reverted to make easier saving of new datafiles
+                runids_raw = file.read().split("\n")
+                runids_list = [int(x) for x in runids_raw[:len(runids_raw)-1]]
+
+                runids_number = len(runids_raw)-1
+        else: 
+            runids_list = []
+            runids_number = 0
+
+        if len(logs[datetag])==int(runids_number):
+
+            # runids_list.reverse()
+            runids_output = runids_list
+
+        else:
+            print('Updating run ids file for '+str(datetag))
+            runids_list_append=[]
+
+            unsaved_keys = [logs[datetag][key] for key in list(logs[datetag].keys())[runids_number:]]
+
+            for ju, logtag in enumerate(sorted(unsaved_keys, reverse=True)):
+                filename = logtag #logs[datetag][logtag]
+                logtag = os.path.basename(os.path.dirname(filename)) # update definition of logtag, lost when extracting keys from dictionary
+
+                # extract file from db and ruid
+                if _db_ini==False:
+                    from os.path import dirname, join
+                    qcodes.dataset.initialise_or_create_database_at(join(dirname(dirname(filename)),'db_'+datetag+'.db'))
+                    _db_ini==True
+                # print(qcodes.config.core.db_location)    
+                _found=False
+                i=0
+                while _found==False:
+                    i+=1
+                    try:
+                        run_data = qcodes.dataset.load_by_id(i)
+                    except:
+                        _found=True
+                        data_run_id=0
+                    date_db=datetime.strptime(run_data.run_timestamp(),"%Y-%m-%d %H:%M:%S")
+                    run_data_time = date_db.strftime("%H%M%S")
+                    if (run_data_time==logtag) | (run_data_time==str(int(logtag)+1)):
+                        data_run_id = run_data.run_id
+                        _found=True
+                        stop_index=i
+                    
+                runids_list_append.append(data_run_id)
+
+            runids_list.reverse()
+            runids_list_append.reverse()
+            runids_list.extend(runids_list_append)
+            runids_list.reverse()
+            runids_list.append(len(runids_list)) # appends number of files indexed
+            
+            with open(cache_file,'w') as file:
+                file.write("\n".join(map(str,runids_list)))
+
+            runids_output = runids_list
+        
+        return runids_output
+
     def update_logs(self, filter_str=None):
         ''' Update the list of measurements '''
         model = self._treemodel
@@ -387,6 +516,7 @@ class DataViewer(QtWidgets.QMainWindow):
             self.data_directory, self.extensions)
         dd = self.datafiles
 
+
         if filter_str:
             dd = [s for s in dd if filter_str in s]
 
@@ -394,8 +524,10 @@ class DataViewer(QtWidgets.QMainWindow):
             print('DataViewer: found %d files' % (len(dd)))
 
         model.clear()
+        # model.setHorizontalHeaderLabels(
+        #     ['Log', 'Sample', 'location', 'filename', 'Setpoints', 'Outputs', 'Comments'])
         model.setHorizontalHeaderLabels(
-            ['Log', 'Sample', 'location', 'filename', 'Setpoints', 'Outputs', 'Comments'])
+            ['#','Log', 'Sample', 'location', 'filename', 'Setpoints', 'Outputs', 'Comments'])
 
         logs = dict()
         for _, filename in enumerate(dd):
@@ -410,13 +542,22 @@ class DataViewer(QtWidgets.QMainWindow):
 
         if self.verbose >= 2:
             print('DataViewer: create gui elements')
+
         for i, datetag in enumerate(sorted(logs.keys())[::-1]):
             if self.verbose >= 2:
                 print('DataViewer: datetag %s ' % datetag)
 
+            cache_file=os.path.join(self.data_directory,datetag,'runids_'+str(datetag)+'.txt')
+            runids_list = self._get_db_runids(logs,datetag,cache_file)
+            # print(runids_list)
+            # print(len(runids_list))
+
             parent1 = QtGui.QStandardItem(datetag)
             for j, logtag in enumerate(sorted(logs[datetag], reverse=True)):
+                # print(j)
+                # print(len(logs[datetag]))
                 filename = logs[datetag][logtag]
+
                 child_log = QtGui.QStandardItem(logtag)
 
                 loc = '\\'.join(filename.split('\\')[:-1])
@@ -428,6 +569,7 @@ class DataViewer(QtWidgets.QMainWindow):
                 looptxt, outputtxt, sampletxt, commenttxt = DataViewer.get_data_info(
                     tempdata.metadata)
 
+                child_index = QtGui.QStandardItem(str(runids_list[j]))
                 child_sample = QtGui.QStandardItem(sampletxt)
                 child_loop = QtGui.QStandardItem(looptxt)
                 child_outp = QtGui.QStandardItem(outputtxt)
@@ -445,15 +587,19 @@ class DataViewer(QtWidgets.QMainWindow):
                 child_outp.setToolTip('<img src="%s", width=300>' % (thumbloc))
                 child_comment.setToolTip(
                     '<img src="%s", width=300>' % (thumbloc))
-
+                
+                # parent1.appendRow(
+                #     [child_log, child_sample, child3, child4, child_loop, child_outp, child_comment])
                 parent1.appendRow(
-                    [child_log, child_sample, child3, child4, child_loop, child_outp, child_comment])
+                    [child_index, child_log, child_sample, child3, child4, child_loop, child_outp, child_comment])
 
             model.appendRow(parent1)
 
             self.logtree.setColumnWidth(0, 120)
-            self.logtree.setColumnHidden(2, True)
+            # self.logtree.setColumnHidden(2, True)
+            # self.logtree.setColumnHidden(3, True)
             self.logtree.setColumnHidden(3, True)
+            self.logtree.setColumnHidden(4, True)
 
         if self.verbose >= 2:
             print('DataViewer: update_logs done')
@@ -538,11 +684,10 @@ class DataViewer(QtWidgets.QMainWindow):
 
         pp = index.parent()
         row = index.row()
-        tag = pp.child(row, 2).data()  # hidden column
-        filename = pp.child(row, 3).data()  # hidden column
+        tag = index.sibling(row, 3).data()  # hidden column for PyQt6
+        filename = index.sibling(row, 4).data()  # hidden column, for PyQt6
         self.filename = filename
         self.datatag = tag
-        # print(filename)
 
         if tag is None:
             return
@@ -569,11 +714,11 @@ class DataViewer(QtWidgets.QMainWindow):
 
             looptxt, outputtxt, sampletxt, commenttxt = DataViewer.get_data_info(
                 data.metadata)
-            q = pp.child(row, 1).model()
-            q.setData(pp.child(row, 1), sampletxt)
-            q.setData(pp.child(row, 4), looptxt)
-            q.setData(pp.child(row, 5), outputtxt)
-            q.setData(pp.child(row, 6), commenttxt)
+            q = index.sibling(row, 1).model()
+            q.setData(index.sibling(row, 2), sampletxt)
+            q.setData(index.sibling(row, 5), looptxt)
+            q.setData(index.sibling(row, 6), outputtxt)
+            q.setData(index.sibling(row, 7), commenttxt)
 
             self.reset_combo_items(data, data_keys)
             self.functionsqueue_callback(self.fqueue, data)
@@ -652,8 +797,10 @@ class DataViewer(QtWidgets.QMainWindow):
             pass
 
         # needed to update window scene before creating exporter
-        pg.QtGui.QApplication.processEvents()
-        exporter = pg.exporters.ImageExporter(
+        # pg.QtGui.QApplication.processEvents()
+
+        QApplication.processEvents()
+        exporter = ImageExporter(
             self.qplotss['windows'][0].win.scene())
         exporter.export(thumbfile)
 
@@ -705,17 +852,20 @@ class DataViewer(QtWidgets.QMainWindow):
             nanarray = ~(np.isnan(getattr(self.dataset, ds).set_arrays[0]))
             self.nanvalues = nanarray
 
-            if np.shape(getattr(self.dataset, ds).set_arrays)[0] == 1:
+            __array = list(getattr(self.dataset, ds).set_arrays)
+
+            if len(__array) == 1:
+            # if np.shape(getattr(self.dataset, ds).set_arrays)[0] == 1:
 
                 self.qplotss['windows'][j].add(x=getattr(self.dataset, ds).set_arrays[0][nanarray], y=getattr(self.dataset, ds).ndarray[nanarray],
-                                               xlabel=getattr(self.dataset, ds).set_arrays[0].name, ylabel=getattr(
-                                                   self.dataset, ds).name,
+                                               xlabel=getattr(self.dataset, ds).set_arrays[0].name, ylabel=getattr(self.dataset, ds).name,
                                                xunit=getattr(self.dataset, ds).set_arrays[0].unit, yunit=getattr(self.dataset, ds).unit)
 
                 self.dataproc.freezeCmap.setEnabled(False)
                 self.dataproc.getLinecut.setEnabled(False)
 
-            elif np.shape(getattr(self.dataset, ds).set_arrays)[0] == 2:
+            elif len(__array) == 2:
+            # elif np.shape(getattr(self.dataset, ds).set_arrays)[0] == 2:
                 self.dataproc.freezeCmap.setEnabled(True)
                 self.dataproc.getLinecut.setEnabled(True)
 
@@ -728,10 +878,11 @@ class DataViewer(QtWidgets.QMainWindow):
                     X.append(Xx[sortinds])
                     Z.append(Zz[sortinds])
 
+                self.Y = getattr(self.dataset, ds).set_arrays[0][nanarray]
                 self.X = X
-                self.Z = Z
+                self.Z = np.flip(np.rot90(Z), 0) # Z
 
-                self.qplotss['windows'][j].add(x=getattr(self.dataset, ds).set_arrays[0][nanarray], y=X, z=np.flip(np.rot90(Z), 0),
+                self.qplotss['windows'][j].add(x=self.Y, y=self.X, z=self.Z,
                                                xlabel=getattr(self.dataset, ds).set_arrays[0].name, ylabel=getattr(
                                                    self.dataset, ds).set_arrays[1].name, zlabel=getattr(self.dataset, ds).name,
                                                xunit=getattr(self.dataset, ds).set_arrays[0].unit, yunit=getattr(self.dataset, ds).set_arrays[1].unit, zunit=getattr(self.dataset, ds).unit)
@@ -1109,7 +1260,10 @@ class DataViewer(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     import sys
+    
+    # def start_threads(worker):
 
+    
     if len(sys.argv) < 2:
         sys.argv += ['-d', os.path.join(os.path.expanduser('~'),
                                         'tmp', 'qdata')]
@@ -1122,8 +1276,21 @@ if __name__ == '__main__':
     verbose = args.verbose
     datadir = args.datadir
 
-    app = pg.mkQApp()
+    # app = pg.mkQApp()
+    from PyQt6.QtWidgets import QApplication
+    app = QApplication(sys.argv)
 
+    # debugpy.debug_this_thread()
+
+    # worker = DataViewer()
+    # datadir='C:\qtNE_dbs_2021\Antonio'
     dataviewer = DataViewer(data_directory=datadir, extensions=['dat', 'hdf5'])
+
+    # __thr = start_threads(dataviewer)
+
     dataviewer.verbose = 5
     dataviewer.logtree.setColumnWidth(0, 240)
+    
+    dataviewer.show()
+    app.exec_()
+    # sys.exit(app.exec())

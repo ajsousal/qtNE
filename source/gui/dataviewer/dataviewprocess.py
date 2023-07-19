@@ -42,6 +42,9 @@ class DataProc(QtWidgets.QDialog):
 		self.jpgbutton = QtWidgets.QPushButton()
 		self.jpgbutton.setText('Export JPEG image')
 
+		self.jupyterbutton = QtWidgets.QPushButton()
+		self.jupyterbutton.setText('Generate Jupyter Notebook')
+
 
 		self.freezeCmap = QtWidgets.QPushButton()
 		self.freezeCmap.setText('Freeze Colormap')
@@ -77,6 +80,7 @@ class DataProc(QtWidgets.QDialog):
 		bLayout.addWidget(self.exportLabel)
 		bLayout.addWidget(self.pptbutton)
 		bLayout.addWidget(self.jpgbutton)
+		bLayout.addWidget(self.jupyterbutton)
 		# bLayout.addWidget(self.autoWindow)
 
 		
@@ -84,6 +88,8 @@ class DataProc(QtWidgets.QDialog):
 		self.outCombo.currentIndexChanged.connect(self.main.combobox_callback)
 		self.pptbutton.clicked.connect(self.main.ppt_callback)
 		self.jpgbutton.clicked.connect(self.main.tojpg_callback)
+
+		self.jupyterbutton.clicked.connect(self.main.jupyter_callback)
 
 
 		self.refreshPlot.clicked.connect(self.main.refreshdata)

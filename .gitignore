@@ -1,6 +1,8 @@
 .vscode/
 measurement_scripts/*
 tmp/*
+init/02_create_instruments.py
+run_qtNE.bat
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

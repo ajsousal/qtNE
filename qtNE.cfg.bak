@@ -1,0 +1,7 @@
+{
+    "datadir": "D:\\meas_dbs",
+    "measurementdir": "C:\\_measurement_software\\qtNE\\measurement_scripts",
+    "default_user": "Antonio",
+    "tempdir": "C:\\_measurement_software\\qtNE\\tmp",
+    "external_modules": "C:\\qtNE_external_modules"
+}

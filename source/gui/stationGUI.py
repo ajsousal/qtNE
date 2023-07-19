@@ -5,9 +5,9 @@ import logging
 import os
 
 import pyqtgraph as pg
-import qtpy.QtGui as QtGui
+# import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
-from qtpy.QtWidgets import QFileDialog, QWidget
+# from qtpy.QtWidgets import QFileDialog, QWidget
 
 import qcodes
 
@@ -39,7 +39,6 @@ from source.gui.new_measgui import meas_creator
 
 
 class StationGUI(QtWidgets.QMainWindow):
-
 
     def __init__(self,station=None,database_dir=None):
         """ 
@@ -92,9 +91,11 @@ class StationGUI(QtWidgets.QMainWindow):
         self.MeasQueuer = QtWidgets.QPushButton()
         self.MeasQueuer.setText('Measurement Queuer')
 
+        self.JupyterCall = QtWidgets.QPushButton()
+        self.JupyterCall.setText('Open Jupyter Notebooks')
 
-        self.MeasCreator = QtWidgets.QPushButton()
-        self.MeasCreator.setText('Measurement Creator')
+        # self.MeasCreator = QtWidgets.QPushButton()
+        # self.MeasCreator.setText('Measurement Creator')
 
 ## ------------- vertical layout
 
@@ -104,7 +105,8 @@ class StationGUI(QtWidgets.QMainWindow):
         vertLayout.addItem(instrumentLayout)
         vertLayout.addWidget(self.DataView)
         vertLayout.addWidget(self.MeasQueuer)
-        vertLayout.addWidget(self.MeasCreator)
+        # vertLayout.addWidget(self.MeasCreator)
+        vertLayout.addWidget(self.JupyterCall)
 
         
 
@@ -141,7 +143,8 @@ class StationGUI(QtWidgets.QMainWindow):
 
         self.MeasQueuer.clicked.connect(self.measqueuer_callback)
         
-        self.MeasCreator.clicked.connect(self.meascreator_callback)
+        # self.MeasCreator.clicked.connect(self.meascreator_callback)
+        self.JupyterCall.clicked.connect(self.jupytercall_callback)
 
 
 
@@ -282,6 +285,54 @@ class StationGUI(QtWidgets.QMainWindow):
         self.meascreator.show()
 
 
+    def jupytercall_callback(self):
+
+        import subprocess
+
+        nb_dir=self.current_directories['current_db']+'\jupyter_nbs'
+
+        filepath="run_jupyter.bat"
+        p = subprocess.Popen([filepath, nb_dir], shell=True)#, stdout = subprocess.PIPE)
+
+        # import errno
+        # import select
+        # from threading import Thread
+
+        # def non_blocking_communicate(proc, inputs):
+        #     """non blocking version of subprocess.Popen.communicate.
+        #     `inputs` should be a sequence of bytes (e.g. file-like object, generator,
+        #     io.BytesIO, etc.).
+        #     """
+
+        #     def write_proc(proc, inputs):
+        #         for line in inputs:
+        #             try:
+        #                 proc.stdin.write(line)
+        #             except IOError as e:
+        #                 # break at "Broken pipe" error, or "Invalid argument" error.
+        #                 if e.errno == errno.EPIPE or e.errno == errno.EINVAL:
+        #                     break
+        #                 else:
+        #                     raise
+        #         proc.stdin.close()
+
+        #     t = Thread(target=write_proc, args=(proc, inputs))
+        #     t.start()
+
+        #     while proc.poll() is None:
+        #         if select.select([proc.stdout], [], [])[0]:
+        #             line = proc.stdout.readline()
+        #             if not line:
+        #                 break
+        #             yield line
+
+        #     proc.wait()
+        #     t.join()
+
+        # stdout, stderr = non_blocking_communicate(p)
+
+        return
+
     def runmeas_callback(self):
 
         """
@@ -294,7 +345,8 @@ class StationGUI(QtWidgets.QMainWindow):
 
             self.t = Thread(target = self.exp_run)
             self.t.start()
-            self.t.isAlive()
+            # self.t.isAlive()
+            self.t.is_alive() # change in Python 3.9
 
             self.meas_running=True
 
@@ -404,6 +456,18 @@ if __name__ == '__main__':
     verbose = args.verbose
     datadir = args.datadir
 
-    app = pg.mkQApp()
+    # app = pg.mkQApp()
+    # app = QApplication([])
 
+    # StationGUI = StationGUI()
+    # # StationGUI.show()
+    # app = pg.mkQApp()
+
+    # StationGUI = StationGUI()
+    # StationGUI.show()
+
+    # from PyQt5.QtWidgets import QApplication
+    # app = QApplication(sys.argv)
     StationGUI = StationGUI()
+    # StationGUI.show()
+    # app.exec_()

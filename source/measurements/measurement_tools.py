@@ -42,6 +42,9 @@ class dataHandle():
         self.filedir=os.path.split(self.filename)[0]
 
         self.timestable=0
+        
+        self.ref_time=0
+        self.len_array=1
 
 
     def add_delay(self,time_delay):
@@ -83,11 +86,70 @@ class dataHandle():
 
             # self._set_stable(par,val,rate)
             par.set(val)
-
-            self.data_dict['fixed'][parameters.index(par)][1]=val
+            self.data_dict['fixed'][parameters.index(par)][1]=val # if self.len_array==1 else val*np.ones(self.len_array)
             # print(self.data_dict)
-
             
+
+    def set_Fixed_nosave(self,parameters,values,rate=None):
+        if rate is None:
+            rate=100
+
+        for par, val in zip(parameters,values):
+            # self._set_stable(par,val,rate)
+            par.set(val)
+            
+        self.pars_fixed_to_array=parameters
+        self.pars_fixed_vals_to_array=values
+
+
+    def probe_out_array(self,parameter):
+        out_array=parameter.get()
+        self.len_array=len(out_array)
+
+    def get_out_array(self,parameter,index,time_factor=1e-6,n_avgs=1): # for use with Keysight digitizer, time-dependent data
+
+        # print(out_array)
+            
+        out_array=parameter.get()
+        # print(out_array)
+        print('number of averages: '+ str(n_avgs))
+        print('length buffer array: '+str(len(out_array)))
+        
+        if n_avgs!=1:
+            avg_array_size=int(len(out_array)/n_avgs)
+            avg_array=np.zeros(avg_array_size)
+            for n in  range(n_avgs):
+                # print(n)
+                # print(len(out_array[n*avg_array_size:(n+1)*avg_array_size]))
+                avg_array+=out_array[n*avg_array_size:(n+1)*avg_array_size]/n_avgs    
+                
+                
+            setp_array=np.arange(avg_array_size)*time_factor #2e-9 # in seconds,
+            out_array=avg_array 
+            # print(len(avg_array))
+            # print(len(setp_array))
+        else:
+        # setp_array=(perf_counter()-self.ref_time) + np.arange(len(out_array))*2e-9 # in seconds
+        # time_factor=1e-6 #2e-9
+            setp_array=np.arange(len(out_array))*time_factor #2e-9 # in seconds, 
+            
+        self.data_dict['outputs'][index][1] = out_array
+
+        self.data_dict['setpoints'][len(self.data_dict['setpoints'])-1][1] = setp_array # valid for sweep setpoint
+
+        # print(self.pars_fixed_to_array)
+        # print(self.pars_fixed_vals_to_array)
+        # for par, val in zip(self.pars_fixed_to_array,self.pars_fixed_vals_to_array):
+        #     self.data_dict['fixed'][self.pars_fixed_to_array.index(par)][1] = val*np.ones(len(out_array))        
+
+    def get_out_moku(self,parameter,index): # for use with Keysight digitizer, time-dependent data
+
+        # print(out_array)
+            
+        out_array=parameter.get()     
+        
+        self.data_dict['outputs'][index][1] = out_array[1]#[list(out_array.keys())[0]] # assuming one output only
+        self.data_dict['setpoints'][len(self.data_dict['setpoints'])-1][1] = out_array[0]#[list(out_array.keys())[1]] # assuming one output only
 
     def get_Out(self,parameter,index):
         outval = parameter.get()

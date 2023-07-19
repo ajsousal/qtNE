@@ -267,7 +267,7 @@ class DataFuncs(QtWidgets.QDialog):
 												'thermal'])]],
 			# 'interp_x': [procstyles.f_xinterp, [('points', 100)]],
 			# 'interp_y': [procstyles.f_yinterp, [('points', 100)]],
-			'log': [procstyles.f_log],
+			'log': [procstyles.f_log, [('axis',['x','y'])]],
 			'filt_lowpass': [procstyles.f_lowpass, [('x_width', 3.0),
 										 ('y_height', 3.0),
 										 ('method', ['gaussian',

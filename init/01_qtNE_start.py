@@ -2,7 +2,7 @@
 
 
 import h5py
-import netCDF4
+# import netCDF4
 print('passed')
 
 import qcodes

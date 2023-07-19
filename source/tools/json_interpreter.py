@@ -109,8 +109,12 @@ class jsonExperiment():
                 instr_module = importlib.import_module(
                     self.loaded_json['Instruments']['Classes'][instr_class]['location'])
                 instr_to_parent_kwargs[instr_class] = {}
+                if 'init' in self.loaded_json['Instruments']['Classes'][instr_class]:
+                    kwargs = self.loaded_json['Instruments']['Classes'][instr_class]['init']
+                    instr_to_parent_kwargs[instr_class].update(kwargs)
 
-                parent_class = getattr(instr_module, instr_class)(self.station)
+                # parent_class = getattr(instr_module, instr_class)(self.station)
+                parent_class = getattr(instr_module, instr_class)(self.station,**instr_to_parent_kwargs[instr_class])
                 instrument_class = getattr(parent_class, inputs)(self.station)
                 inputdict = self.loaded_json['Instruments']['Inputs'][inputs]
                 try:
@@ -121,10 +125,30 @@ class jsonExperiment():
 
                 if inputdict['IDs']:
                     for ji in range(len(inputdict['IDs'])):
-                        b = instrument_class.create_parameter(inputdict, ji)
+                        try:
+                            b = instrument_class.create_parameter(inputdict, ji)
+                        except:
+                            del(self.station[inputdict['component']].parameters[inputdict['IDs'][ji]])
+                            b = instrument_class.create_parameter(inputdict, ji)
+                            # b = getattr(self.station[inputdict['component']],inputdict['IDs'][ji])
+                        print(b)
+                            
                         gates[inputdict['IDs'][ji]] = b
                         # independent parameter
                         meas.register_parameter(gates[inputdict['IDs'][ji]])
+                        
+                print(gates)
+            ## time parameter
+            
+        #     time_parameter = qcodes.Parameter(
+        #         'time',
+        #         label='time',
+        #         unit='s',
+        #         get_cmd= time.perf_counter
+        # )             
+        #     gates['time']=time_parameter
+        #     meas.register_parameter(gates['time'])
+            
 
             print(instr_to_parent_kwargs)
 
@@ -145,35 +169,43 @@ class jsonExperiment():
                 print('here!')
                 paramname = self.loaded_json['Experiment']['Sweep loop']['ID'] if isinstance(
                     self.loaded_json['Experiment']['Sweep loop']['ID'], str) else self.loaded_json['Experiment']['Sweep loop']['ID'][0]
-                paramsweep = gates[paramname]
-                params_setpoints.append(paramsweep)
+                # paramsweep = gates[paramname]
+                # params_setpoints.append(paramsweep)
+                if paramname=='time' or paramname=='frequency':
+                    paramsweep = gates[paramname]
+                    params_setpoints.append(paramsweep)
+                    vals_setpoints.append([])
+                    setpoints_size.append(0)
+                else:
+                    paramsweep = gates[paramname]
+                    params_setpoints.append(paramsweep)
 
-                for inputs in self.loaded_json['Instruments']['Inputs']:
-                    for ids in self.loaded_json['Instruments']['Inputs'][inputs]['IDs']:
-                        # if paramname==ids and self.loaded_json['Instruments']['Inputs'][inputs]['class']=='NEtransport':
-                        if paramname == ids:
+                    for inputs in self.loaded_json['Instruments']['Inputs']:
+                        for ids in self.loaded_json['Instruments']['Inputs'][inputs]['IDs']:
+                            # if paramname==ids and self.loaded_json['Instruments']['Inputs'][inputs]['class']=='NEtransport':
+                            if paramname == ids:
 
-                            classname = self.loaded_json['Instruments']['Inputs'][inputs]['class']
+                                classname = self.loaded_json['Instruments']['Inputs'][inputs]['class']
 
-                            #range_ind=self.loaded_json['Experiment']['Class settings']['NEtransport']['Voltage ranges'][paramname]
-                            range_ind = self.loaded_json['Experiment']['Class settings'][classname]['ranges'][paramname]
-                            if 'stepsize' in range_ind:
-                                if range_ind['begin'] < range_ind['end']:
-                                    sweepvalues = np.arange(range_ind['begin'],
-                                                            # + range_ind['stepsize'],
-                                                            range_ind['end'],
-                                                            range_ind['stepsize'])
-                                elif range_ind['begin'] > range_ind['end']:
-                                    sweepvalues = np.arange(range_ind['begin'],
-                                                            # - range_ind['stepsize'],
-                                                            range_ind['end'],
-                                                            -1*range_ind['stepsize'])
-                            elif 'npts' in range_ind:
-                                sweepvalues = np.linspace(
-                                    range_ind['begin'], range_ind['end'], range_ind['npts']+1)
+                                #range_ind=self.loaded_json['Experiment']['Class settings']['NEtransport']['Voltage ranges'][paramname]
+                                range_ind = self.loaded_json['Experiment']['Class settings'][classname]['ranges'][paramname]
+                                if 'stepsize' in range_ind:
+                                    if range_ind['begin'] < range_ind['end']:
+                                        sweepvalues = np.arange(range_ind['begin'],
+                                                                # + range_ind['stepsize'],
+                                                                range_ind['end'],
+                                                                range_ind['stepsize'])
+                                    elif range_ind['begin'] > range_ind['end']:
+                                        sweepvalues = np.arange(range_ind['begin'],
+                                                                # - range_ind['stepsize'],
+                                                                range_ind['end'],
+                                                                -1*range_ind['stepsize'])
+                                elif 'npts' in range_ind:
+                                    sweepvalues = np.linspace(
+                                        range_ind['begin'], range_ind['end'], range_ind['npts']+1)
 
-                            vals_setpoints.append(sweepvalues)
-                            setpoints_size.append(len(sweepvalues))
+                                vals_setpoints.append(sweepvalues)
+                                setpoints_size.append(len(sweepvalues))
 
             else:
 
@@ -362,6 +394,8 @@ class jsonExperiment():
                     'sweep_par': params_setpoints[1],
                     'sweep_vals': vals_setpoints[1]
                 })
+                
+                print(runner_kwargs)
 
             # fixed gates
             # not needed! fix later
@@ -404,30 +438,30 @@ class jsonExperiment():
                     self.loaded_json['Instruments']['Classes'][classes]['location'])
                 class_init_kwargs.update({'station': self.station})
 
-                if classes != 'NEtransport':
-                    try:
-                        class_init_kwargs.update(
-                            instr_to_parent_kwargs[classes])
+                # if classes != 'NEtransport':
+                try:
+                    class_init_kwargs.update(
+                        instr_to_parent_kwargs[classes])
 
-                    except:
-                        print('Class '+str(classes) +
-                              ' not in use by any instrument.')
+                except:
+                    print('Class '+str(classes) +
+                            ' not in use by any instrument.')
 
-                    if 'inputs' in getattr(class_module, classes).__init__.__code__.co_varnames:
-                        class_init_kwargs.update({'inputs': gates})
-                    # if 'parameters needed' in self.loaded_json['Instruments']['Classes'][classes]:
-                    # 	if 'inputs' in self.loaded_json['Instruments']['Classes'][classes]['parameters needed']:
-                    # 		class_init_kwargs.update({'inputs': gates})
+                if 'inputs' in getattr(class_module, classes).__init__.__code__.co_varnames:
+                    class_init_kwargs.update({'inputs': gates})
+                # if 'parameters needed' in self.loaded_json['Instruments']['Classes'][classes]:
+                # 	if 'inputs' in self.loaded_json['Instruments']['Classes'][classes]['parameters needed']:
+                # 		class_init_kwargs.update({'inputs': gates})
 
-                    if 'init' in self.loaded_json['Instruments']['Classes'][classes]:
+                if 'init' in self.loaded_json['Instruments']['Classes'][classes]:
 
-                        class_init_kwargs.update(
-                            self.loaded_json['Instruments']['Classes'][classes]['init'])
+                    class_init_kwargs.update(
+                        self.loaded_json['Instruments']['Classes'][classes]['init'])
 
-                        for kwarg in self.loaded_json['Instruments']['Classes'][classes]['init']:
-                            if 'ID' in kwarg:
-                                setlist.append(
-                                    self.loaded_json['Instruments']['Classes'][classes]['init'][kwarg])
+                    for kwarg in self.loaded_json['Instruments']['Classes'][classes]['init']:
+                        if 'ID' in kwarg:
+                            setlist.append(
+                                self.loaded_json['Instruments']['Classes'][classes]['init'][kwarg])
 
                     # new method, automatic approach
 
@@ -447,17 +481,16 @@ class jsonExperiment():
 
                 classinstr = getattr(classes_instr[self.loaded_json['Instruments']['Outputs'][output]['class']], outfunc)(self.station)
                 if hasattr(classinstr,'create_parameter'):
-                    add_output = classinstr.create_parameter(self.loaded_json['Instruments']['Outputs'][output])
+                    try:
+                        add_output = classinstr.create_parameter(self.loaded_json['Instruments']['Outputs'][output])
+                    except:
+                        del(self.station[self.loaded_json['Instruments']['Outputs'][output]['component']].parameters[self.loaded_json['Instruments']['Outputs'][output]['name']])
+                        add_output = classinstr.create_parameter(self.loaded_json['Instruments']['Outputs'][output])
+                        
+                    
                 else:
-                    # add_output = classinstr(self.loaded_json['Instruments']['Outputs'][output])
                     add_output = getattr(classes_instr[self.loaded_json['Instruments']['Outputs'][output]['class']], outfunc)(self.loaded_json['Instruments']['Outputs'][output])
-                # try:
-                    # add_output = getattr(classes_instr[self.loaded_json['Instruments']['Outputs'][output]['class']], outfunc)(self.station).create_parameter(self.loaded_json['Instruments']['Outputs'][output])
-                # except:
-                    # print(output + ' is not a class. Trying to add from class method')
-                    # add_output = getattr(classes_instr[self.loaded_json['Instruments']['Outputs'][output]['class']], outfunc)(self.loaded_json['Instruments']['Outputs'][output])
 
-                # print(add_output)
 
                 if not isinstance(add_output, list):
                     add_output = [add_output]
@@ -479,6 +512,10 @@ class jsonExperiment():
                 if classes != 'NEtransport':
                     if 'outputs' in getattr(class_module, classes).__init__.__code__.co_varnames:
                         classes_instr[classes].outputs = outdict
+                # if 'outputs' in getattr(class_module, classes).__init__.__code__.co_varnames:
+                        # classes_instr[classes].outputs = outdict
+                        
+                        
                     # if 'parameters needed' in self.loaded_json['Instruments']['Classes'][classes]:
                     # 	if 'outputs' in self.loaded_json['Instruments']['Classes'][classes]['parameters needed']:
                     # 		classes_instr[classes].outputs=outdict
@@ -524,17 +561,17 @@ class jsonExperiment():
         # try:
         for classes in self.loaded_json['Experiment']['Class settings']:
             # print(classes)
-            if classes != 'NEtransport':
-                class_ = classes_instr[classes]
-                # print(class_)
+            # if classes != 'NEtransport':
+            class_ = classes_instr[classes]
+            # print(class_)
 
-                for classfunc in self.loaded_json['Experiment']['Class settings'][classes]:
-                    if classfunc != 'ranges':
-                        sets = self.loaded_json['Experiment']['Class settings'][classes][classfunc]
-                        # print(sets)
-                        getattr(class_, classfunc)(**sets)
+            for classfunc in self.loaded_json['Experiment']['Class settings'][classes]:
+                if classfunc != 'ranges':
+                    sets = self.loaded_json['Experiment']['Class settings'][classes][classfunc]
+                    # print(sets)
+                    getattr(class_, classfunc)(**sets)
 
-                runner_kwargs.update({classes: class_})
+            runner_kwargs.update({classes: class_})
         # except:
         # 	print('Class '+str(classes)+' not parsed to kwargs.')
             # pass
