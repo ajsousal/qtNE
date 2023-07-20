@@ -84,9 +84,8 @@ class stationOverview(QtWidgets.QMainWindow):
 
     def fill_station_components(self):
 
-        # components_list = self.station.components
 
-        parentItem = self._parametertreemodel.invisibleRootItem()
+        parentItem = self._stationtreemodel.invisibleRootItem()
         # print(self.station)
         for component in self.station.components:
             driver = self.station.components[component].__module__
@@ -97,6 +96,9 @@ class stationOverview(QtWidgets.QMainWindow):
             parentItem.appendRow([name_item,driver_item])
 
 
+    def fill_parameter_list(self):
+
+        print()
 
 
 ## need to return station at some point
