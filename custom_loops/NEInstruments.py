@@ -431,6 +431,9 @@ class NEtransport(object):
                 channel = 'Input'+dictionary['input_ch']
                 ch_source = dictionary['metaparameters']['source_ch']
                 self.i.set_source(ch_source,channel)
+                
+                self.npts = 1024
+                self.timewindow = timebase_end-timebase_start
 
                 
                 def get_reading_trace(channel,n_avgs):
@@ -448,7 +451,7 @@ class NEtransport(object):
 
                 def get_spectra_density(channel,n_avgs, sample_f):
                     data_timedomain = get_reading_trace(channel,n_avgs)
-                    (f,spc) = signal.periodogram(array(data_timedomain[1])/dictionary['gain'],sample_f,scaling='density')
+                    (f,spc) = signal.periodogram(array(data_timedomain[1])/dictionary['gain'],sample_f,scaling='density',detrend=None)
                     data_array = [f, spc]
                     return data_array
 
@@ -466,7 +469,7 @@ class NEtransport(object):
                             label=dictionary['label'],
                             unit=dictionary['unit'],
                             instrument=self.station[dictionary['component']],
-                            get_cmd=lambda ch=channel, n_avgs=dictionary['metaparameters']['n_avgs'], sample_f = dictionary['metaparameters']['sampling_frequency']: get_spectra_density(ch,n_avgs, sample_f)
+                            get_cmd=lambda ch=channel, n_avgs=dictionary['metaparameters']['n_avgs'], sample_f = self.npts/self.timewindow: get_spectra_density(ch,n_avgs, sample_f)
                         )
                 return parameter
 
