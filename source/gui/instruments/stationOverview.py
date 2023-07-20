@@ -89,8 +89,8 @@ class stationOverview(QtWidgets.QMainWindow):
         parentItem = self._parametertreemodel.invisibleRootItem()
         # print(self.station)
         for component in self.station.components:
-            driver = component.__module__
-            name = component.name
+            driver = self.station.components[component].__module__
+            name = self.station.components[component].name
 
             name_item = QtGui.QStandardItem(name)
             driver_item = QtGui.QStandardItem(driver)
