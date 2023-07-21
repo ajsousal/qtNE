@@ -81,12 +81,13 @@ class stationOverview(QtWidgets.QMainWindow):
         self._parametertreemodel.setHorizontalHeaderLabels(['Parameter','Component']) ## ,'Settable'])
 
         self.fill_station_components()
+        self.native_parameters_dict = self.return_parameter_list() # dictionary containing native parameters for every station component VIP: to be used also for autoGUI
+        self.fill_parameter_list()
 
     def fill_station_components(self):
 
-
         parentItem = self._stationtreemodel.invisibleRootItem()
-        # print(self.station)
+        
         for component in self.station.components:
             driver = self.station.components[component].__module__
             name = self.station.components[component].name
@@ -96,9 +97,23 @@ class stationOverview(QtWidgets.QMainWindow):
             parentItem.appendRow([name_item,driver_item])
 
 
-    def fill_parameter_list(self):
+    def return_parameter_list(self):
+        parameters_dictionary = {}
+        for component in self.station.components:
+            parameters_dictionary[component] = list(self.station.components[component].parameters)
 
-        print()
+        return parameters_dictionary
+            
+
+    def fill_parameter_list(self):
+        for component in self.station.components:
+            parent = QtGui.QStandardItem(component)
+            self._parametertreemodel.appendRow(parent)
+            
+            for parameter in self.station.components[component]:
+                if parameter not in self.native_parameters_dict[component]:
+                    child = QtGui.QStandardItem(parameter)
+                    parent.appendRow(child)
 
 
 ## need to return station at some point
