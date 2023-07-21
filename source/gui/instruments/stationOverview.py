@@ -110,7 +110,7 @@ class stationOverview(QtWidgets.QMainWindow):
             parent = QtGui.QStandardItem(component)
             self._parametertreemodel.appendRow(parent)
             
-            for parameter in self.station.components[component]:
+            for parameter in self.station.components[component].parameters:
                 if parameter not in self.native_parameters_dict[component]:
                     child = QtGui.QStandardItem(parameter)
                     parent.appendRow(child)
