@@ -71,10 +71,21 @@ class stationOverview(QtWidgets.QMainWindow):
         self.setGeometry(1000, 30, 300, 500)
 
 
-        # disable edit
+        ## disable tree edit
         self.stationtree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        # self.logtree.clicked.connect(lambda: self.log_callback(
-            # self.logtree.currentIndex()))  # self.log_callback)
+        self.parametertree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        
+
+        ## Connect buttons
+
+        self.SoftPanel.clicked.connect(self.generate_softpanel)
+
+        self.AddParameter.clicked.connect(self.add_parameter)
+        self.AddBatchParameter.clicked.connect(self.add_batch_parameters)
+        self.DeleteParameter.clicked.connect(self.delete_parameter)
+        self.RefreshParameter.clicked.connect(self.fill_parameter_list)
+
+
 
         self.show()
 
@@ -84,6 +95,9 @@ class stationOverview(QtWidgets.QMainWindow):
         self.fill_station_components()
         self.native_parameters_dict = self.main.native_parameters_dict
         self.fill_parameter_list()
+
+
+
 
     def fill_station_components(self):
 
@@ -117,4 +131,14 @@ class stationOverview(QtWidgets.QMainWindow):
                     parent.appendRow(child)
 
 
-## need to return station at some point
+    def add_parameter(self):
+        print()
+
+    def add_batch_parameters(self):
+        print()
+
+    def delete_parameter(self):
+        print()
+
+    def generate_softpanel(self):
+        print()
