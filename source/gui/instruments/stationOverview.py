@@ -7,12 +7,12 @@ import qtpy.QtWidgets as QtWidgets
 
 class stationOverview(QtWidgets.QMainWindow):
 
-    def __init__(self,station=None,parent = None):
+    def __init__(self,parent = None):
 
         super(stationOverview, self).__init__(parent)
 
         self.main = parent
-        self.station = station
+
 
         # self.database_dir = database_dir
 
@@ -89,9 +89,9 @@ class stationOverview(QtWidgets.QMainWindow):
 
         parentItem = self._stationtreemodel.invisibleRootItem()
         
-        for component in self.station.components:
-            driver = self.station.components[component].__module__
-            name = self.station.components[component].name
+        for component in self.main.station.components:
+            driver = self.main.station.components[component].__module__
+            name = self.main.station.components[component].name
 
             name_item = QtGui.QStandardItem(name)
             driver_item = QtGui.QStandardItem(driver)
@@ -100,18 +100,18 @@ class stationOverview(QtWidgets.QMainWindow):
 
     def return_parameter_list(self):
         parameters_dictionary = {}
-        for component in self.station.components:
-            parameters_dictionary[component] = list(self.station.components[component].parameters)
+        for component in self.main.station.components:
+            parameters_dictionary[component] = list(self.main.station.components[component].parameters)
 
         return parameters_dictionary
             
 
     def fill_parameter_list(self):
-        for component in self.station.components:
+        for component in self.main.station.components:
             parent = QtGui.QStandardItem(component)
             self._parametertreemodel.appendRow(parent)
             
-            for parameter in self.station.components[component].parameters:
+            for parameter in self.main.station.components[component].parameters:
                 print(parameter)
                 if parameter not in self.native_parameters_dict[component]:
                     print(parameter)
