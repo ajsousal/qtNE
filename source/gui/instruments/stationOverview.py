@@ -7,10 +7,11 @@ import qtpy.QtWidgets as QtWidgets
 
 class stationOverview(QtWidgets.QMainWindow):
 
-    def __init__(self,station=None):
+    def __init__(self,station=None,parent = None):
 
-        super(stationOverview, self).__init__()
+        super(stationOverview, self).__init__(parent)
 
+        self.main = parent
         self.station = station
 
         # self.database_dir = database_dir
@@ -81,7 +82,7 @@ class stationOverview(QtWidgets.QMainWindow):
         self._parametertreemodel.setHorizontalHeaderLabels(['Parameter','Component']) ## ,'Settable'])
 
         self.fill_station_components()
-        self.native_parameters_dict = self.return_parameter_list() # dictionary containing native parameters for every station component VIP: to be used also for autoGUI
+        self.native_parameters_dict = self.main.native_parameters_dict
         self.fill_parameter_list()
 
     def fill_station_components(self):
@@ -111,6 +112,7 @@ class stationOverview(QtWidgets.QMainWindow):
             self._parametertreemodel.appendRow(parent)
             
             for parameter in self.station.components[component].parameters:
+                print(parameter)
                 if parameter not in self.native_parameters_dict[component]:
                     print(parameter)
                     child = QtGui.QStandardItem(parameter)
