@@ -159,7 +159,6 @@ class StationGUI(QtWidgets.QMainWindow):
 
         self.set_user_directories(self.userCombo.currentText())
 
-
         self.native_parameters_dict = self.return_parameter_list() # dictionary containing native parameters for every station component VIP: to be used also for autoGUI
 
 
@@ -305,7 +304,7 @@ class StationGUI(QtWidgets.QMainWindow):
 
 
     def stationoverview_callback(self):
-        self.stationoverview=stationOverview.stationOverview(self.station)
+        self.stationoverview=stationOverview.stationOverview(self)
         self.stationoverview.show()
 
     def jupytercall_callback(self):
