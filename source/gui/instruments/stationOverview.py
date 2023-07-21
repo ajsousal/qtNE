@@ -121,6 +121,9 @@ class stationOverview(QtWidgets.QMainWindow):
             
 
     def fill_parameter_list(self):
+
+        self._parametertreemodel.clear()
+        
         for component in self.main.station.components:
             parent = QtGui.QStandardItem(component)
             self._parametertreemodel.appendRow(parent)
