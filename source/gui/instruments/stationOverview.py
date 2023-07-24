@@ -96,6 +96,9 @@ class stationOverview(QtWidgets.QMainWindow):
         self.native_parameters_dict = self.main.native_parameters_dict
         self.fill_parameter_list()
 
+        ## Connect trees
+
+        self._parametertreemodel.doubleClicked.connect(lambda dict_par = self.dict_par: self.open_parameter(dict_par))
 
 
 
@@ -110,17 +113,12 @@ class stationOverview(QtWidgets.QMainWindow):
             name_item = QtGui.QStandardItem(name)
             driver_item = QtGui.QStandardItem(driver)
             parentItem.appendRow([name_item,driver_item])
-
-
-    def return_parameter_list(self):
-        parameters_dictionary = {}
-        for component in self.main.station.components:
-            parameters_dictionary[component] = list(self.main.station.components[component].parameters)
-
-        return parameters_dictionary
             
 
     def fill_parameter_list(self):
+        ''' 
+        Retrieves parameters that are not native of the instrument, eg. created for measurements
+        '''
 
         self._parametertreemodel.clear()
         
@@ -134,6 +132,15 @@ class stationOverview(QtWidgets.QMainWindow):
                     parent.appendRow(child)
 
 
+    def return_parameter_list(self):
+        parameters_dictionary = {}
+        for component in self.main.station.components:
+            parameters_dictionary[component] = list(self.main.station.components[component].parameters)
+
+        return parameters_dictionary
+    
+
+
     def add_parameter(self):
         print()
 
@@ -144,4 +151,8 @@ class stationOverview(QtWidgets.QMainWindow):
         print()
 
     def generate_softpanel(self):
+        print()
+
+
+    def open_parameter(parameter_dict):
         print()
