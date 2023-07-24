@@ -4,11 +4,11 @@ from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButto
 
 class autoSF(QtWidgets.QDialog):
 
-    def __init__(self, instrument = None, instr_dict=None, parent=None):
+    def __init__(self, instrument = None, instr_dict=None): #, parent=None):
                 
-        super(autoSF, self).__init__(parent)
+        super(autoSF, self).__init__() #parent)
 
-        self.main=parent
+        # self.main=parent
 
         self.instrument = instrument
         self.instrument_dictionary = instr_dict# dictionary with native parameters of instrument
@@ -18,7 +18,7 @@ class autoSF(QtWidgets.QDialog):
 
         self.setWindowTitle('SoftPanel')
 
-        self.setLayout(horLayout)
+        self.setLayout(self.verLayout)
         self.setGeometry(500, 660, 200, 300) # x y w h
         
         self.create_gui()

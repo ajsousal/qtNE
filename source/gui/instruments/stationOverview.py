@@ -4,6 +4,8 @@ from PyQt6.QtWidgets import QFileDialog, QWidget, QApplication
 
 import qtpy.QtWidgets as QtWidgets
 
+import autoSF
+
 
 class stationOverview(QtWidgets.QMainWindow):
 
@@ -121,6 +123,7 @@ class stationOverview(QtWidgets.QMainWindow):
         '''
 
         self._parametertreemodel.clear()
+        # parentItem = self._stationtreemodel.invisibleRootItem()
         
         for component in self.main.station.components:
             parent = QtGui.QStandardItem(component)
@@ -151,7 +154,10 @@ class stationOverview(QtWidgets.QMainWindow):
         print()
 
     def generate_softpanel(self):
-        print()
+
+        instrument = self.stationtree.currentIndex()
+        dictionary = self.native_parameters_dict[instrument]
+        autoSF.autoSF(instrument,dictionary)
 
 
     def open_parameter(parameter_dict):
