@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QFileDialog, QWidget, QApplication
 
 import qtpy.QtWidgets as QtWidgets
 
-import autoSF
+from .autoSF import autoSF
 
 
 class stationOverview(QtWidgets.QMainWindow):
@@ -100,7 +100,7 @@ class stationOverview(QtWidgets.QMainWindow):
 
         ## Connect trees
 
-        self._parametertreemodel.doubleClicked.connect(lambda dict_par = self.dict_par: self.open_parameter(dict_par))
+        # self.parametertree.doubleClicked.connect(lambda dict_par = self.dict_par: self.open_parameter(dict_par))
 
 
 
@@ -155,9 +155,10 @@ class stationOverview(QtWidgets.QMainWindow):
 
     def generate_softpanel(self):
 
-        instrument = self.stationtree.currentIndex()
-        dictionary = self.native_parameters_dict[instrument]
-        autoSF.autoSF(instrument,dictionary)
+        instrument_index = self.stationtree.currentIndex()
+        instrument = self.main.station.components[instrument_index.data()]#Qt.DisplayRole)
+        dictionary = self.native_parameters_dict[instrument.name]
+        autoSF(instrument,dictionary)
 
 
     def open_parameter(parameter_dict):
