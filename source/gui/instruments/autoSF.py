@@ -18,12 +18,14 @@ class autoSF(QtWidgets.QDialog):
 
         self.setWindowTitle('SoftPanel')
 
-        self.setLayout(self.verLayout)
+        # self.setLayout(self.verLayout)
         self.setGeometry(500, 660, 200, 300) # x y w h
         
-        self.create_gui()
+        
 
         self.show() 
+        
+        self.create_gui()
 
 
     def create_gui(self):
@@ -33,9 +35,20 @@ class autoSF(QtWidgets.QDialog):
         self.line_edit = {}
         self.buttons_get = {}
         self.buttons_set = {}
+        
+        ## add list of parameters to gui
         for key in self.instrument_dictionary:
             
-            value = getattr(self.instrument,key)
+            print(key)
+            
+            try:
+                value = getattr(self.instrument,key).get()
+            except:
+                print('Could not get parameter: '+key)
+                value = 'NaN'
+            
+            
+            # print(value)
             
             lineLayout = QtWidgets.QHBoxLayout()
             
@@ -53,17 +66,24 @@ class autoSF(QtWidgets.QDialog):
 
             lineLayout.addWidget(self.buttons_get[key])
 
-            if getattr(self.instrument,key) is None: # parameter has set
+            if getattr(self.instrument,key).settable: # parameter has set
                 self.buttons_set[key] = QtWidgets.QPushButton()
                 self.buttons_set[key].setText('Set')
-                self.buttons_get[key].clicked.connect(lambda setkey= key, setval=line_edit[key].getText(): self._set_parameter(setkey,setval))
+                self.buttons_get[key].clicked.connect(lambda setkey= key, setval=self.line_edit[key].text(): self._set_parameter(setkey,setval))
 
                 lineLayout.addWidget(self.buttons_set[key])
 
             else:
                 pass
             
+            # print(lineLayout)
             self.verLayout.addItem(lineLayout)
+        self.setLayout(self.verLayout)
+        
+        
+        ## add buttons for methods associated to instrument
+        
+        # for 
 
 
 

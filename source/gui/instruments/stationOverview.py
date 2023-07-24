@@ -87,7 +87,7 @@ class stationOverview(QtWidgets.QMainWindow):
         self.DeleteParameter.clicked.connect(self.delete_parameter)
         self.RefreshParameter.clicked.connect(self.fill_parameter_list)
 
-
+        self.softpanel = {}
 
         self.show()
 
@@ -158,7 +158,9 @@ class stationOverview(QtWidgets.QMainWindow):
         instrument_index = self.stationtree.currentIndex()
         instrument = self.main.station.components[instrument_index.data()]#Qt.DisplayRole)
         dictionary = self.native_parameters_dict[instrument.name]
-        autoSF(instrument,dictionary)
+        self.softpanel[instrument.name] = autoSF(instrument,dictionary) # TODO: create one instance per instruments
+        
+        # self.softpanel[instrument.name].create_gui()
 
 
     def open_parameter(parameter_dict):
