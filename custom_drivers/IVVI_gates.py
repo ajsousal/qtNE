@@ -169,7 +169,7 @@ class VirtualDAC(Instrument):
         gate = 'dac%d' % gatemap[1]
         i.set(gate, value)
 
-    def _set_wrap(self, value, gate, gain):
+    def _set_wrap(self, value, gate):
         gain = self._gain_map[gate]
         self.set(param_name=gate, value=value/gain)
 
