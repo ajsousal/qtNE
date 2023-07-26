@@ -422,11 +422,12 @@ class NEtransport(object):
                 self.i = self.station[dictionary['component']].i
                 timebase_start = dictionary['metaparameters']['timebase'][0]
                 timebase_end = dictionary['metaparameters']['timebase'][1]
+                timewindow=timebase_end-timebase_start
                 self.i.set_timebase(timebase_start, timebase_end)
                 trig_mode = dictionary['metaparameters']['trigger_mode']
-                self.i.set_trigger(mode=trig_mode)
+                self.i.set_trigger(source='ChannelA',mode=trig_mode)#,holdoff=(timebase_end-timebase_start))
                 
-                self.npts_broadcast = (self.i.get_timebase()[list(self.i.get_timebase().keys())[1]]- self.i.get_timebase()[list(self.i.get_timebase().keys())[0]])*self.i.get_samplerate()['sample_rate']
+                # self.npts_broadcast = (self.i.get_timebase()[list(self.i.get_timebase().keys())[1]]- self.i.get_timebase()[list(self.i.get_timebase().keys())[0]])*self.i.get_samplerate()['sample_rate']
 
                 channel = 'Input'+dictionary['input_ch']
                 ch_source = dictionary['metaparameters']['source_ch']
@@ -434,16 +435,22 @@ class NEtransport(object):
                 
                 self.npts = 1024
                 self.timewindow = timebase_end-timebase_start
+                
+                self.i.enable_rollmode(False)
+                self.i.set_acquisition_mode('DeepMemory')
 
                 
                 def get_reading_trace(channel,n_avgs):
+                    sleep(timewindow)
                     data_raw = self.i.get_data()
                     data_array = [array(data_raw['time']), array(data_raw['ch'+dictionary['input_ch']])/dictionary['gain']]
                     
+                    
                     for i in range(n_avgs-1):
-                        # print(i)
+                        print(i)
                         data_raw = self.i.get_data()
                         data_array[1] += array(data_raw['ch'+dictionary['input_ch']])/dictionary['gain']
+                        
                         
                     data_array[1]=data_array[1]/n_avgs
                     
