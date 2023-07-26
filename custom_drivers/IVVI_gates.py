@@ -1,9 +1,3 @@
-"""
-Created on Wed Feb  8 13:36:01 2017
-
-@author: diepencjv, eendebakpt
-"""
-
 import logging
 import time
 import warnings
@@ -48,7 +42,7 @@ class VirtualDAC(Instrument):
             rc_times (None or dict): dictionary with rc times for the gates
 
         The format of the `gate_map` to map the gate 'P1' to dac4 of the first instrument with a gain of 1 and
-        'B0' to dac3 of the second instrument is: `{'P1': (0, 4,1), 'B0': (1, 3)}`.
+        'B0' to dac3 of the second instrument wtiha  is: `{'P1': (0, 4, 1), 'B0': (1, 3, 5)}`.
 
         If the DAC gates are connected to the sample with a bias-T then there is a typical RC time
         for a voltage change to arrive at the sample. These RC times can be provides to the instument
@@ -61,6 +55,7 @@ class VirtualDAC(Instrument):
         self._update_instruments_names()
         self._gate_map = gate_map
         self._direct_gate_map = {}  # fast access to parameters
+        self._gain_map = {} # access to gains of each dac
         self._fast_readout = True
 
         if rc_times is None:
@@ -84,6 +79,7 @@ class VirtualDAC(Instrument):
             i = self._instruments[instrument_index]
             igate = 'dac%d' % gatemap[1]
             self._direct_gate_map[gate] = getattr(i, igate)
+            self._gain_map[gate] = gatemap[2]
 
     @property
     def gate_map(self):
@@ -134,28 +130,33 @@ class VirtualDAC(Instrument):
     def get_all(self, verbose=0):
         """ Gets all gate values. """
         for gate in sorted(self._gate_map.keys()):
-            self.get(gate)
+            gain = self._gain_map[gate]
+            self.get(gate) / gain
             if verbose:
-                print('%s: %f' % (gate, self.get(gate)))
+                print('%s: %f' % (gate, self.get(gate) / gain))
 
     def _get(self, gate, fast_readout=False):
+
+        gain = self._gain_map[gate]
+        
         if self._direct_gate_map is not None:
             param = self._direct_gate_map[gate]
             if fast_readout:
-                return param.get_latest()
+                return param.get_latest()/gain
             else:
-                return param.get()
+                return param.get() /gain
 
         gatemap = self._gate_map[gate]
         instrument_index = self._instrument_index(gatemap[0])
         gate = 'dac%d' % gatemap[1]
         if fast_readout:
-            return self._instruments[instrument_index].get_latest(gate)
+            return self._instruments[instrument_index].get_latest(gate) /gain
         else:
-            return self._instruments[instrument_index].get(gate)
+            return self._instruments[instrument_index].get(gate)/gain
 
     def _set(self, value, gate):
-        value = float(value)
+        gain = self._gain_map[gate]
+        value = float(value)/gain # divide by gain (in map)
 
         if self._direct_gate_map is not None:
             param = self._direct_gate_map[gate]
@@ -168,10 +169,11 @@ class VirtualDAC(Instrument):
         gate = 'dac%d' % gatemap[1]
         i.set(gate, value)
 
-    def _set_wrap(self, value, gate):
-        self.set(param_name=gate, value=value)
+    def _set_wrap(self, value, gate, gain):
+        gain = self._gain_map[gate]
+        self.set(param_name=gate, value=value/gain)
 
-    def _make_gate(self, gate):
+    def _make_gate(self, gate, gain):
         self.add_parameter(gate,
                            label='%s' % gate,  # (\u03bcV)',
                            unit='mV',
@@ -272,11 +274,13 @@ class VirtualDAC(Instrument):
 
     def allvalues(self):
         """ Return all gate values in a simple dict. """
+        
+
         if self._fast_readout:
-            vals = [(gate, self.parameters[gate].get_latest())
+            vals = [(gate, self.parameters[gate].get_latest()/self._gain_map[gate])
                     for gate in sorted(self._gate_map)]
         else:
-            vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map)]
+            vals = [(gate, self.get(gate)/self._gain_map[gate]) for gate in sorted(self._gate_map)]
         return dict(vals)
 
     def allvalues_string(self, fmt='%.3f'):
