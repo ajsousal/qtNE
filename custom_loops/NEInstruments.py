@@ -437,9 +437,24 @@ class NEtransport(object):
                 self.timewindow = timebase_end-timebase_start
                 
                 self.i.enable_rollmode(False)
-                self.i.set_acquisition_mode('DeepMemory')
+                # self.i.set_acquisition_mode('DeepMemory')
+                self.i.set_acquisition_mode('Precision')
 
-                
+
+                def get_reading_buffer():
+                    path_to_save = 'C:\\_measurement_software\\qtNE\\tmp'
+                    fname_to_save = 'tmp_data.npy'
+
+                    response = self.i.save_high_res_buffer(comments='tmp')
+                    fname_memory = response['file_name']
+                    self.i.download(target='persist',file_name=fname_to_save,local_path=path_to_save)
+                    self.i.delete(target='persist',file_name=fname_memory)
+                    data_raw = np.load(os.path.join(path_to_save,fname_to_save))
+                    # print(data_raw)
+                    data_array = data_raw # [array(data_raw['time']), array(data_raw['ch'+dictionary['input_ch']])/dictionary['gain']]
+                    return data_raw
+
+
                 def get_reading_trace(channel,n_avgs):
                     sleep(timewindow)
                     data_raw = self.i.get_data()
