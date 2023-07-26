@@ -173,7 +173,7 @@ class VirtualDAC(Instrument):
         gain = self._gain_map[gate]
         self.set(param_name=gate, value=value/gain)
 
-    def _make_gate(self, gate, gain):
+    def _make_gate(self, gate):
         self.add_parameter(gate,
                            label='%s' % gate,  # (\u03bcV)',
                            unit='mV',
