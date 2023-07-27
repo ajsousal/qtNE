@@ -1,5 +1,6 @@
 import sys
 from PyQt6 import QtWidgets
+from functools import partial
 
 
 class autoSF(QtWidgets.QDialog):
@@ -39,7 +40,7 @@ class autoSF(QtWidgets.QDialog):
         ## add list of parameters to gui
         for key in self.instrument_dictionary:
             
-            print(key)
+            # print(key)
             
             try:
                 value = getattr(self.instrument,key).get()
@@ -62,14 +63,15 @@ class autoSF(QtWidgets.QDialog):
 
             self.buttons_get[key] = QtWidgets.QPushButton()
             self.buttons_get[key].setText('Get')
-            self.buttons_get[key].clicked.connect(lambda getkey = key: self._get_parameter(getkey))
+            # print(key)
+            self.buttons_get[key].clicked.connect(partial(self._get_parameter, key=key)) #lambda getkey = key: self._get_parameter(getkey))
 
             lineLayout.addWidget(self.buttons_get[key])
 
             if getattr(self.instrument,key).settable: # parameter has set
                 self.buttons_set[key] = QtWidgets.QPushButton()
                 self.buttons_set[key].setText('Set')
-                self.buttons_get[key].clicked.connect(lambda setkey= key, setval=self.line_edit[key].text(): self._set_parameter(setkey,setval))
+                self.buttons_set[key].clicked.connect(partial(self._set_parameter, key=key)) #setkey= key, setval=self.line_edit[key].text(): self._set_parameter(setkey,setval))
 
                 lineLayout.addWidget(self.buttons_set[key])
 
@@ -90,16 +92,23 @@ class autoSF(QtWidgets.QDialog):
     def _get_parameter(self,key):
         '''
         '''
-        value = getattr(self.instrument, key)
+        print(self.instrument)
+        print(key)
+        value = getattr(self.instrument, key).get()
         self.line_edit[key].setText(str(value))
         # print()
 
 
-    def _set_parameter(self,key,value):
+    def _set_parameter(self,key):
         '''
         '''
 
-        setattr(self.instrument,key,value)
+        print('here '+key)
+        value = float(self.line_edit[key].text())
+        print(value)
+        
+        # print()
+        getattr(self.instrument,key).set(value)
         self._get_parameter(key)
 
         # print()

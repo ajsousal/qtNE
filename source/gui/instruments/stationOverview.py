@@ -170,7 +170,7 @@ class stationOverview(QtWidgets.QMainWindow):
 
         instrument_index = self.stationtree.currentIndex()
         instrument = self.main.station.components[instrument_index.data()]#Qt.DisplayRole)
-        dictionary = self.native_parameters_dict[instrument.name]
+        dictionary = instrument.parameters #self.native_parameters_dict[instrument.name]
         self.softpanel[instrument.name] = autoSF(instrument,dictionary) # TODO: create one instance per instruments
         
         # self.softpanel[instrument.name].create_gui()
