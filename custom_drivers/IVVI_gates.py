@@ -133,7 +133,7 @@ class VirtualDAC(Instrument):
             gain = self._gain_map[gate]
             self.get(gate) / gain
             if verbose:
-                print('%s: %f' % (gate, self.get(gate) / gain))
+                print('%s: %f' % (gate, self.get(gate) * gain))
 
     def _get(self, gate, fast_readout=False):
 
@@ -142,17 +142,17 @@ class VirtualDAC(Instrument):
         if self._direct_gate_map is not None:
             param = self._direct_gate_map[gate]
             if fast_readout:
-                return param.get_latest()/gain
+                return param.get_latest() * gain
             else:
-                return param.get() /gain
+                return param.get() * gain
 
         gatemap = self._gate_map[gate]
         instrument_index = self._instrument_index(gatemap[0])
         gate = 'dac%d' % gatemap[1]
         if fast_readout:
-            return self._instruments[instrument_index].get_latest(gate) /gain
+            return self._instruments[instrument_index].get_latest(gate) * gain
         else:
-            return self._instruments[instrument_index].get(gate)/gain
+            return self._instruments[instrument_index].get(gate) * gain
 
     def _set(self, value, gate):
         gain = self._gain_map[gate]
