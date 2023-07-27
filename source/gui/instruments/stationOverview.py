@@ -95,7 +95,7 @@ class stationOverview(QtWidgets.QMainWindow):
         self._parametertreemodel.setHorizontalHeaderLabels(['Parameter','Component']) ## ,'Settable'])
 
         self.fill_station_components()
-        self.native_parameters_dict = self.main.native_parameters_dict
+        # self.native_parameters_dict = self.main.native_parameters_dict
         self.fill_parameter_list()
 
         ## Connect trees
@@ -124,15 +124,28 @@ class stationOverview(QtWidgets.QMainWindow):
 
         self._parametertreemodel.clear()
         # parentItem = self._stationtreemodel.invisibleRootItem()
-        
+
+        parentItem = self._stationtreemodel.invisibleRootItem()
+
         for component in self.main.station.components:
-            parent = QtGui.QStandardItem(component)
-            self._parametertreemodel.appendRow(parent)
+            if self.main.station.components[component].__class__ is 'qcodes.parameters.parameter.Parameter': # not in self.native_parameters_dict[component]:
+                parameter = component # self.main.station.components[component]
+                try:
+                    instrument = self.station.components[component].instrument.name
+                except:
+                    instrument = ''
+                
+                param_item = QtGui.QStandardItem(parameter)
+                instr_item = QtGui.QStandardItem(instrument)
+                parentItem.appendRow([param_item,instr_item])
+
+            # parent = QtGui.QStandardItem(component)
+            # self._parametertreemodel.appendRow(parent)
             
-            for parameter in self.main.station.components[component].parameters:
-                if parameter not in self.native_parameters_dict[component]:
-                    child = QtGui.QStandardItem(parameter)
-                    parent.appendRow(child)
+            # for component in self.main.station.components:
+            #     if self.main.station.components[component].__class__ is 'qcodes.parameters.parameter.Parameter': # not in self.native_parameters_dict[component]:
+            #         child = QtGui.QStandardItem(parameter)
+            #         parent.appendRow(child)
 
 
     def return_parameter_list(self):

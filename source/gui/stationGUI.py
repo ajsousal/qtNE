@@ -159,18 +159,18 @@ class StationGUI(QtWidgets.QMainWindow):
 
         self.set_user_directories(self.userCombo.currentText())
 
-        self.native_parameters_dict = self.return_parameter_list() # dictionary containing native parameters for every station component VIP: to be used also for autoGUI
+        # self.native_parameters_dict = self.return_parameter_list() # dictionary containing native parameters for every station component VIP: to be used also for autoGUI
 
 
 
 ## -------------- Retrieve parameters from station components
     
-    def return_parameter_list(self):
-        parameters_dictionary = {}
-        for component in self.station.components:
-            parameters_dictionary[component] = list(self.station.components[component].parameters)
+    # def return_parameter_list(self):
+    #     parameters_dictionary = {}
+    #     for component in self.station.components:
+    #         parameters_dictionary[component] = list(self.station.components[component].parameters)
 
-        return parameters_dictionary
+    #     return parameters_dictionary
 
     
 ## -------------  GUI functions
