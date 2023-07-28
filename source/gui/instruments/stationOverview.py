@@ -1,5 +1,6 @@
 import PyQt6.QtGui as QtGui
 from PyQt6.QtWidgets import QFileDialog, QWidget, QApplication
+import qcodes
 
 
 import qtpy.QtWidgets as QtWidgets
@@ -70,6 +71,7 @@ class stationOverview(QtWidgets.QMainWindow):
 
         self.setWindowTitle('Station Summary')
         self.stationtree.header().resizeSection(0, 280)
+        self.parametertree.header().resizeSection(0, 280)
         self.setGeometry(1000, 30, 300, 500)
 
 
@@ -108,36 +110,39 @@ class stationOverview(QtWidgets.QMainWindow):
 
         parentItem = self._stationtreemodel.invisibleRootItem()
         
+        # print('station')
         for component in self.main.station.components:
-            driver = self.main.station.components[component].__module__
-            name = self.main.station.components[component].name
+            # print( self.main.station.components[component].__class__ == 'qcodes.parameters.parameter.Parameter')
+            if not (self.main.station.components[component].__class__ == qcodes.parameters.parameter.Parameter):
+                driver = self.main.station.components[component].__module__
+                name = self.main.station.components[component].name
 
-            name_item = QtGui.QStandardItem(name)
-            driver_item = QtGui.QStandardItem(driver)
-            parentItem.appendRow([name_item,driver_item])
-            
+                name_item = QtGui.QStandardItem(name)
+                driver_item = QtGui.QStandardItem(driver)
+                parentItem.appendRow([name_item,driver_item])
+
 
     def fill_parameter_list(self):
         ''' 
         Retrieves parameters that are not native of the instrument, eg. created for measurements
         '''
+        
+        # print('pars')
+        # self._parametertreemodel.clear()
 
-        self._parametertreemodel.clear()
-        # parentItem = self._stationtreemodel.invisibleRootItem()
-
-        parentItem = self._stationtreemodel.invisibleRootItem()
+        parentItem2 = self._parametertreemodel.invisibleRootItem()
 
         for component in self.main.station.components:
-            if self.main.station.components[component].__class__ is 'qcodes.parameters.parameter.Parameter': # not in self.native_parameters_dict[component]:
+            if self.main.station.components[component].__class__ == qcodes.parameters.parameter.Parameter: # not in self.native_parameters_dict[component]:
                 parameter = component # self.main.station.components[component]
                 try:
-                    instrument = self.station.components[component].instrument.name
+                    instrument = self.main.station.components[component].instrument.name
                 except:
                     instrument = ''
                 
                 param_item = QtGui.QStandardItem(parameter)
                 instr_item = QtGui.QStandardItem(instrument)
-                parentItem.appendRow([param_item,instr_item])
+                parentItem2.appendRow([param_item,instr_item])
 
             # parent = QtGui.QStandardItem(component)
             # self._parametertreemodel.appendRow(parent)
