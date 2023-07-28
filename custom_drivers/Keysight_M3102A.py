@@ -15,29 +15,35 @@ except:
 
 
 from . import Keysight_fpga_utils as fpga_utils
+from qcodes_contrib_drivers.Keysight.SD_common.SD_DIG import SD_DIG
 
 
+# class FPGA_parser():
+class Keysight_M3102A(SD_DIG):
 
-class Keysight_M3102A(Instrument):
-
-    def __init__(self,name: str, chassis: int, slot: int,**kwargs):
-    
-        super().__init__(name,**kwargs)
+    def __init__(self, name, chassis=1, slot=5, **kwargs):
+            
+            super().__init__(name, chassis, slot, channels=4, triggers=4, **kwargs)
         
-        DIGI_PRODUCT = "M3102A"                # Product's model number
-        CHASSIS = chassis                      # Chassis number holding product
-        SLOT = slot                        # Slot number of product in chassis
- 
-        self.bit_depth=15
+            DIGI_PRODUCT = "M3102A"                # Product's model number
+            # CHASSIS = chassis                      # Chassis number holding product
+            # SLOT = slot                        # Slot number of product in chassis
+    
+            self.bit_depth=15
 
-        self.core=SD1.SD_AIN()
+            self.core=self.SD_AIN()
+            # self.core=SD1.SD_AIN()
 
-        self.open(DIGI_PRODUCT, CHASSIS, SLOT)
+            self.open(DIGI_PRODUCT, chassis, slot)
 
-        self.fpga_loaded = 0
+            self.fpga_loaded = 0
 
 
+            self.add_parameter(
 
+            )
+
+        # def 
 
     def _waitPointsRead(self,channel,npts):
         timeout=1
