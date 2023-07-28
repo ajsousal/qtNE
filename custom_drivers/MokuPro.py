@@ -10,13 +10,19 @@ from moku.instruments import Oscilloscope
 
 class MokuScope(Instrument):
 
-    def __init__(self,name: str, IP_address: str, **kwargs):
+    def __init__(self,name: str, address: str, **kwargs):
     
         super().__init__(name,**kwargs)
         
-        self.i = Oscilloscope(IP_address, force_connect=True)
+        self.i = Oscilloscope(address, force_connect=True)
 
 
+    def get_idn(self):
+        """
+        Overwrites the get_idn function using constants as the hardware
+        does not have a proper \*IDN function.
+        """
+        return -1
 
     def get_reading_buffer(self):
         

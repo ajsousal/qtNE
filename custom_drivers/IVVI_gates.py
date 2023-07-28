@@ -49,8 +49,18 @@ class VirtualDAC(Instrument):
         with the `rc_times` argument.
 
         """
+        
+        print(instruments)
         super().__init__(name, **kwargs)
+        
+        # print(type(instruments))
+        # print(type(instruments[0]))
+        # if type(instruments[0]) == str:
+            # self._instruments = [self.station.components[instr] for instr in instruments]
+        # else:
+            # self._instruments = instruments
         self._instruments = instruments
+            
         self._instruments_names = []
         self._update_instruments_names()
         self._gate_map = gate_map
