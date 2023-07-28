@@ -1,0 +1,81 @@
+ intruments:
+  digitzer:
+    type: custom_drivers.Keysight_M3102A
+    chassis: 1
+    slot: 5
+
+    init: 
+      acquisition: DAQ # FPGA
+      FPGAconfig:
+        bitstream_dir: 'C:\\Users\\TritonUser\\Documents\\Keysight\\PathWave FPGA\\qbit_processing\\qbit_processing.build\\qbit_processing_impl_2023-06-01_10_01_52\\bitfiles'
+        bitstream_file: 'qbit_processing.k7z'
+        config_register: 'Register_Bank'
+        config:
+          nDecim: 12
+      channelInputConfig:
+        fullScale: 4
+        impedance: 1
+        coupling: 0
+      DAQconfig:
+        pointsPerCycle: 1000
+        nCycles: 1
+        triggerDelay: 0
+        triggerMode: 0
+      triggerIOconfig:
+        direction: 1
+      DAQdigitalTriggerConfig:
+        triggerSource: 0
+        triggerBehavior: 'TRIG_RISE'
+
+
+## where to define gain???
+
+
+
+
+
+
+      
+ 
+ 
+ {
+					  "class": "NEtransport",
+					  "component": "digitizer",
+					  "name": "Idc",
+					  "acquisition": "DAQ",
+					  "gain": 1e8,
+					  "label": "SD current", 
+					  "unit": "A",
+					  "channel": 1,
+					  "FPGAconfig": {
+									"bitstream_dir":"C:\\Users\\TritonUser\\Documents\\Keysight\\PathWave FPGA\\qbit_processing\\qbit_processing.build\\qbit_processing_impl_2023-06-01_10_01_52\\bitfiles",
+									"bitstream_file":"qbit_processing.k7z",
+									"config_register": "Register_Bank",
+									"config": {
+												"nDecim": 12
+											  }
+									},
+					  "metaparameters":{
+										"channelInputConfig":
+													{
+													"fullScale": 4,
+													"impedance": 1,
+													"coupling": 0
+													},
+										"DAQconfig":
+													{
+													 "pointsPerCycle":1000,
+													 "nCycles": 1,
+													 "triggerDelay": 0,
+													 "triggerMode": 0
+													 },
+										"triggerIOconfig":
+													{
+													"direction": 1
+													},
+										"DAQdigitalTriggerConfig":{
+													  "triggerSource": 0,
+													  "triggerBehavior": "TRIG_RISE"
+														}
+													}	
+										} 

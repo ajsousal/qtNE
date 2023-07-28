@@ -1,0 +1,8 @@
+instruments:
+  ivvi:
+    type: qcodes_contrib_drivers.drivers.QuTech.IVVI
+    address: COM3
+    init:
+      numdacs: 16
+      polarity: ['BIP', 'BIP', 'BIP', 'POS']
+      use_locks: false
