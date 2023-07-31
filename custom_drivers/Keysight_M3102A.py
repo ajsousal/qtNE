@@ -15,13 +15,13 @@ except:
 
 
 from . import Keysight_fpga_utils as fpga_utils
-from qcodes_contrib_drivers.Keysight.SD_common.SD_DIG import SD_DIG
+from qcodes_contrib_drivers.drivers.Keysight.SD_common.SD_DIG import SD_DIG
 
 
 # class FPGA_parser():
 class Keysight_M3102A(SD_DIG):
 
-    def __init__(self, name, chassis=1, slot=5, **kwargs):
+    def __init__(self, name, chassis=1, slot=5, config_dict={},**kwargs):
             
             super().__init__(name, chassis, slot, channels=4, triggers=4, **kwargs)
         
@@ -34,58 +34,103 @@ class Keysight_M3102A(SD_DIG):
             self.core=self.SD_AIN()
             # self.core=SD1.SD_AIN()
 
-            self.open(DIGI_PRODUCT, chassis, slot)
+            # self.open(DIGI_PRODUCT, chassis, slot)
 
+            self.open_with_slot(DIGI_PRODUCT, chassis, slot)
             self.fpga_loaded = 0
 
+            self.channels = config['channels']
+            set_settings_DAQconfig(config_dict['DAQconfig'])
+            set_settings_channelInputConfig(config_dict['channelInputConfig'])
+            set_settings_triggerIOconfig(config_dict['triggerIOconfig'])
+            # set_settings_DAQdigitalTriggerConfig(config_dict['DAQdigitalTriggerConfig'])
+            # set_settings_FPGAconfig
+            
 
-            self.add_parameter(
+            self.config = config
 
-            )
+            def set_settings_DAQconfig(self,configs):
+                for ch in self.channels:
+                    par_to_set='self.points_per_cycle_'
+                    exec('%s',(par_to_set+ch)).set(configs['pointsPerCycle'])
+                    par_to_set='self.n_cycles_'
+                    exec('%s',(par_to_set+ch)).set(configs['nCycles'])
+                    par_to_set='self.DAQ_trigger_delay_'
+                    exec('%s',(par_to_set+ch)).set(configs['triggerDelay'])
+                    par_to_set='self.DAQ_trigger_mode_'
+                    exec('%s',(par_to_set+ch)).set(configs['triggerMode'])
 
-        # def 
+            def set_settings_channelInputConfig(self,configs):
+
+                for ch in self.channels:
+                    par_to_set='self.full_scale_'
+                    exec('%s',(par_to_set+ch)).set(configs['full_scale'])
+                    par_to_set='self.impedance_'
+                    exec('%s',(par_to_set+ch)).set(configs['impedance'])
+                    par_to_set='self.coupling_'
+                    exec('%s',(par_to_set+ch)).set(configs['coupling'])
+
+
+            def set_settings_triggerIOconfig(self,configs):
+                    par_to_set='self.trigger_direction'
+                    exec('%s',(par_to_set+ch)).set(configs['direction'])
+
+
+            # def set_settings_DAQdigitalTriggerConfig(self,configs):
+            #     for ch in self.channels:
+            #         par_to_set='self.digital_trigger_mode_'
+            #         exec('%s',(par_to_set+ch)).set(configs['full_scale'])
+
+            # def set_settings_FPGAconfig(self,configs):
+
+
+            # def 
 
     def _waitPointsRead(self,channel,npts):
         timeout=1
         t0=perf_counter()
         totalPointsRead = 0
         while totalPointsRead< npts and perf_counter()-t0 < timeout:
-            totalPointsRead= self.core.DAQcounterRead(channel)
+            totalPointsRead= self.core.SD_AIN.DAQcounterRead(channel)
             
         # print('Elapsed '+str(perf_counter()-t0)+' s.')
 
         
-    def start(self,channel):
-        self.core.DAQstart(channel)
+    # def start(self,channel):
+    #     self.core.DAQstart(channel)
+    #     ## replaced by daq_start
         
-    def flush_buffer(self,channel):
-        self.core.DAQflush(channel)
+    # def flush_buffer(self,channel):
+    #     self.core.DAQflush(channel)
+    #     ## replaced by daq_flush
         
     def pause(self,channel):
-        self.core.DAQpause(channel)
+        self.core.SD_AIN.DAQpause(channel)
     
     def resume(self,channel):
-        self.core.DAQresume(channel)
+        self.core.SD_AIN.DAQresume(channel)
         
-    def stop(self,channel):
-        self.core.DAQstop(channel)
+    # def stop(self,channel):
+    #     self.core.DAQstop(channel)
+    #     ## replaced by daq_stop in SD_DIG
         
-    def trigger(self,channel):
-        self.core.DAQtrigger(channel)
+    # def trigger(self,channel):
+    #     self.core.DAQtrigger(channel) 
+    #     ## replaced by dac_trigger in SD_DIG
 
-    def open(self, DIGI_PRODUCT, CHASSIS, SLOT): 
-        core_id = self.core.openWithSlot(DIGI_PRODUCT, CHASSIS, SLOT)
+    # def open(self, DIGI_PRODUCT, CHASSIS, SLOT): 
+    #     core_id = self.core.SD_AIN.openWithSlot(DIGI_PRODUCT, CHASSIS, SLOT)
         
-        if core_id < 0:
-            print("Module open error:", core_id)
-        else:
-            print("Module opened:", core_id)
-            print("Module name:", self.core.getProductName())
-            print("Slot:", self.core.getSlot())
-            print("Chassis:", self.core.getChassis())
+    #     if core_id < 0:
+    #         print("Module open error:", core_id)
+    #     else:
+    #         print("Module opened:", core_id)
+    #         print("Module name:", self.core.getProductName())
+    #         print("Slot:", self.core.getSlot())
+    #         print("Chassis:", self.core.getChassis())
 
-    def close(self):
-        self.core.close()
+    # def close(self):
+    #     self.core.SD_AIN.close()
 
 ####
 
