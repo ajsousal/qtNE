@@ -22,5 +22,8 @@ gate_map = {
 ivvi_virtual = VirtualDAC('virtual_ivvi',[station.ivvi],gate_map)
 station.add_component(ivvi_virtual)
 
-for gate  in gate_map:
+for gate in gate_map:
+    if gate in station.components:
+        station.remove_component(gate)
+        
     station.add_component(getattr(ivvi_virtual,gate))
