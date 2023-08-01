@@ -3,7 +3,7 @@ import numpy as np
 from functools import partial
 from time import perf_counter
 from os import path
-from qcodes import Instrument
+# from qcodes import Instrument
 from qcodes.utils.validators import Numbers
 
 try:
@@ -16,7 +16,7 @@ except:
 
 from . import Keysight_fpga_utils as fpga_utils
 from qcodes_contrib_drivers.drivers.Keysight.SD_common.SD_DIG import SD_DIG
-from qcodes.instrument.base import Instrument
+# from qcodes.instrument.base import Instrument
 
 # class FPGA_parser():
 class Keysight_M3102A(SD_DIG):
@@ -31,8 +31,7 @@ class Keysight_M3102A(SD_DIG):
     
             self._bit_depth = 15
 
-            self.core=self.SD_AIN()
-            # self.core=SD1.SD_AIN()
+            # self.core=self.SD_AIN()
 
             # self.open(DIGI_PRODUCT, chassis, slot)
 
@@ -44,15 +43,22 @@ class Keysight_M3102A(SD_DIG):
             self.open_with_slot(DIGI_PRODUCT, chassis, slot)
             self.fpga_loaded = 0
 
-            if kwargs['use_fpga']:
-                args_fpga = kwargs['FPGAconfig']
-                self.FPGAloader = M3102_FPGA(**args_fpga)
-                self.fpga_loaded = 1
-
             self.active_channels = kwargs['active_channels']
             set_settings_DAQconfig(kwargs['DAQconfig'])
             set_settings_channelInputConfig(kwargs['channelInputConfig'])
             set_settings_triggerIOconfig(kwargs['triggerIOconfig'])
+
+            if kwargs['use_fpga']:
+                args_fpga = kwargs['FPGAconfig']
+                self.FPGAloader = M3102_FPGAloader(**args_fpga)
+                self.fpga_loaded = 1
+
+            if kwargs['acquisition'] == 'DAQ':
+                self.reader = M3102_DAQreader(self.active_channels)
+            elif kwargs['acquisition'] == 'FPGA':
+                self.reader = M3102A_FPGAreader(self.active_channels)
+
+
             # set_settings_DAQdigitalTriggerConfig(config_dict['DAQdigitalTriggerConfig']) % TODO: config digital trigger
             # set_settings_FPGAconfig
             
@@ -90,13 +96,71 @@ class Keysight_M3102A(SD_DIG):
             #         par_to_set='self.digital_trigger_mode_'
             #         exec('%s',(par_to_set+ch)).set(configs['full_scale'])
 
-            for n in range(self.n_channels):
-                self.add_parameter(
-                    'value_daq_{}'.format(n),
-                    label = 'Value for DAQ {}'.format(n),
-                    get_cmd = partial(self.get_reading_daq, channel = n, npts = )
 
-                )
+
+
+            
+    ## DAQ operation funcions not included in SD_DIG
+    #     
+    def pause(self,channel):
+        self.SD_AIN.DAQpause(channel)
+    
+    def resume(self,channel):
+        self.SD_AIN.DAQresume(channel)
+    ##
+    
+
+    # def get_reading_daq(self,channel):
+    #     npts=self.SD_AIN.__points_per_cycle[channel]
+    #     self.daq_flush(channel)
+    #     self.daq_start(channel)
+    #     reading = np.mean(self.read_buffer_array(channel, npts))/self.gain
+    #     self.daq_stop(channel)
+
+    #     return reading
+    
+    # def get_reading_daq_array(self,channel, npts):
+    #     self.daq_flush(channel) # check, decouple from measurement
+    #     self.daq_start(channel) # check, decouple from measurement
+    #     daq_array = self.read_buffer_array(channel, npts)/self.gain
+    #     self.daq_stop(channel) # check, decouple from measurement
+
+    #     return daq_array
+
+    
+
+class M3102_DAQreader(Keysight_M3102A):
+
+    def __init__(self,channels):
+        for n in channels: #range(self.n_channels):
+            self.add_parameter(
+                'value_daq_{}'.format(n),
+                label = 'Value for DAQ {}'.format(n),
+                get_cmd = np.mean(partial(self.read_buffer_array, channel = n))
+            )
+
+            self.add_parameter(
+                'array_daq_{}'.format(n),
+                label = 'Value for DAQ {}'.format(n),
+                get_cmd = partial(self.read_buffer_array, channel = n)
+            )
+
+    def read_buffer_array(self, channel):
+
+        npts=self.SD_AIN.__points_per_cycle[channel]
+        timeout=70
+
+        self.daq_flush(channel) # check, decouple from measurement
+        self.daq_start(channel) # check, decouple from measurement
+
+        self._waitPointsRead(channel,npts)
+        daq_data=self.SD_AIN.DAQread(channel,npts,timeout)
+        daq_data=daq_data*self.SD_AIN.channelFullScale(channel)/2**(self._bit_depth)
+        daq_data = daq_data/self.gain
+
+        self.daq_stop(channel) # check, decouple from measurement
+        return daq_data 
+    
 
     def _waitPointsRead(self,channel,npts):
         timeout=1
@@ -104,57 +168,9 @@ class Keysight_M3102A(SD_DIG):
         totalPointsRead = 0
         while totalPointsRead< npts and perf_counter()-t0 < timeout:
             totalPointsRead= self.SD_AIN.DAQcounterRead(channel)
-            # totalPointsRead= self.core.SD_AIN.DAQcounterRead(channel)
-            
-    ## DAQ operation funcions not included in SD_DIG
-    #     
-    def pause(self,channel):
-        # self.core.SD_AIN.DAQpause(channel)
-        self.SD_AIN.DAQpause(channel)
-    
-    def resume(self,channel):
-        # self.core.SD_AIN.DAQresume(channel)
-        self.SD_AIN.DAQresume(channel)
-    ##
-    
-
-    def get_reading_daq(self,channel, npts):
-        self.daq_flush(channel)
-        self.daq_start(channel)
-        reading = self.read_buffer_avg(channel, npts)/self.gain
-        self.daq_stop(channel)
-
-        return reading
-    
-    def get_reading_daq_array(self,channel, npts):
-        self.daq_flush(channel) # check, decouple from measurement
-        self.daq_start(channel) # check, decouple from measurement
-        daq_array = self.read_buffer_array(channel, npts)/self.gain
-        self.daq_stop(channel) # check, decouple from measurement
-
-        return daq_array
-
-    def read_buffer_avg(self,channel,npts):
-        timeout=70
-        self._waitPointsRead(channel,npts)
-        # daq_data=self.core.DAQread(channel,npts,timeout)
-        daq_data=self.SD_AIN.DAQread(channel,npts,timeout)
-        value=np.mean(daq_data)*self.SD_AIN.channelFullScale(channel)/2**(self._bit_depth)
-        # value=np.mean(daq_data)*self.core.channelFullScale(channel)/2**(self.bit_depth)
-        return value
-    
-    def read_buffer_array(self, channel, npts):
-        timeout=70
-        # print(npts)
-        # npts = window_length*self.digi_clock
-        self._waitPointsRead(channel,npts)
-        daq_data=self.SD_AIN.DAQread(channel,npts,timeout)
-        daq_data=daq_data*self.SD_AIN.channelFullScale(channel)/2**(self._bit_depth)
-        
-        return daq_data 
 
 
-class M3102_FPGA(Keysight_M3102A):
+class M3102_FPGAloader(Keysight_M3102A):
 
     def __init__(self,bitstream_dir, bitstream_file, active_registers = [], register_inputs = {}):
         '''
@@ -179,18 +195,22 @@ class M3102_FPGA(Keysight_M3102A):
         for par in config_dict[register]:
             self.fpga_write_to_registerbank(register, {par: config_dict[register][par]})
 
+            self.add_parameter(
+                register+'_'+par,
+                label = register+'_'+par,
+                set_cmd = lambda register, value: self.fpga_write_to_registerbank(register, {par: value}),
+                get_cmd = lambda register, par: self.fpga_read_registerbank(register, par): 
+            )
+
 
     def load_and_config_fpga(self,bitstream_dir,bitstream_file):
         dig_bitstream = path.join(bitstream_dir, bitstream_file)
 
         start = perf_counter()
-        # fpga_utils.check_error(self.core.FPGAload(dig_bitstream), 'loading dig bitstream')
         fpga_utils.check_error(self.SD_AIN.FPGAload(dig_bitstream), 'loading dig bitstream')
         duration = (perf_counter() - start) * 1000
-        # print(f'dig {self.core.getSlot()}: {duration:5.1f} ms')
         print(f'dig {self.SD_AIN.getSlot()}: {duration:5.1f} ms')
 
-        # self.core.FPGAconfigureFromK7z(dig_bitstream)
         self.SD_AIN.FPGAconfigureFromK7z(dig_bitstream)
 
         self.fpga_loaded = 1
@@ -199,7 +219,6 @@ class M3102_FPGA(Keysight_M3102A):
     def get_fpga_registers(self):
         if self.fpga_loaded:
             fpga_utils.fpga_list_registers(self.SD_AIN)
-            # fpga_utils.fpga_list_registers(self.core)
         else:
             print('No bitstream loaded to FPGA')
 
@@ -210,7 +229,6 @@ class M3102_FPGA(Keysight_M3102A):
         '''
         if self.fpga_loaded:
             for entry in dict_to_write:
-                # fpga_utils.write_fpga(self.core, registerbank_name+'_' + entry, dict_to_write[entry])
                 fpga_utils.write_fpga(self.SD_AIN, registerbank_name+'_' + entry, dict_to_write[entry])
 
         else:
@@ -219,14 +237,34 @@ class M3102_FPGA(Keysight_M3102A):
 
     def fpga_read_registerbank(self,registerbank_name,register_name):
         if self.fpga_loaded:
-            # value = fpga_utils.read_fpga(self.core, registerbank_name+'_' + register_name)
             value = fpga_utils.read_fpga(self.SD_AIN, registerbank_name+'_' + register_name)
-            # value = value*self.core.channelFullScale(channel)/2**(self.bit_depth) # this is handled at NEInstruments
         else:
             print('No bitstream loaded to FPGA')
 
         return value
+
+
+
     
+## TODO:
+class M3102A_FPGAreader(Keysight_M3102A):
+
+    def __init__(self, channel, registry_bank):
+
+        self.add_parameter(
+            'reading_fpga',
+            label = 'reading from FPGA',
+            get_cmd = partial(self.get_reading_fpga, channel = channel)
+        )
+
+
+    def fpga_read_registerbank(self,registerbank_name,register_name):
+        if self.fpga_loaded:
+            value = fpga_utils.read_fpga(self.SD_AIN, registerbank_name+'_' + register_name)
+        else:
+            print('No bitstream loaded to FPGA')
+
+        return value
 
     def get_reading_fpga(channel,reg_bank,reg):
             self.daq_trigger(channel)
