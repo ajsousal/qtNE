@@ -1,6 +1,6 @@
 instruments:
   digitizer:
-    type: custom_drivers.dummy_instrument.Dummy #custom_drivers.Keysight_M3102A.Keysight_M3102A
+    type: custom_drivers.Keysight_M3102A.Keysight_M3102A
     init: 
       label: 'Idc'
       chassis: 1
@@ -8,6 +8,7 @@ instruments:
       active_channels: [1]
       use_fpga: True # FPGA
       acquisition: DAQ
+      gain: 1
       FPGAconfig:
         bitstream_dir: 'C:\\Users\\TritonUser\\Documents\\Keysight\\PathWave FPGA\\qbit_processing\\qbit_processing.build\\qbit_processing_impl_2023-06-01_10_01_52\\bitfiles'
         bitstream_file: 'qbit_processing.k7z'
@@ -53,7 +54,7 @@ instruments:
     
   # mokuscope:
   #   type: custom_drivers.MokuPro.MokuScope
-    address: '[fe80::7269:79ff:feb0:74c]'
+    # address: '[fe80::7269:79ff:feb0:74c]'
   
   # virtual_ivvi:
     # type: custom_drivers.IVVI_gates.VirtualDAC

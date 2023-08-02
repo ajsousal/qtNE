@@ -16,7 +16,6 @@ class stationOverview(QtWidgets.QMainWindow):
 
         self.main = parent
 
-
         # self.database_dir = database_dir
 
         self.stationtree = QtWidgets.QTreeView()
@@ -112,14 +111,32 @@ class stationOverview(QtWidgets.QMainWindow):
         
         # print('station')
         for component in self.main.station.components:
+            _instrument=self.main.station.components[component]
+            
             # print( self.main.station.components[component].__class__ == 'qcodes.parameters.parameter.Parameter')
-            if not (self.main.station.components[component].__class__ == qcodes.parameters.parameter.Parameter):
-                driver = self.main.station.components[component].__module__
-                name = self.main.station.components[component].name
+            if not (_instrument.__class__ == qcodes.parameters.parameter.Parameter):
+                driver = _instrument.__module__
+                name = _instrument.name
 
-                name_item = QtGui.QStandardItem(name)
-                driver_item = QtGui.QStandardItem(driver)
-                parentItem.appendRow([name_item,driver_item])
+                instr_name_item = QtGui.QStandardItem(name)
+                instr_driver_item = QtGui.QStandardItem(driver)
+                Instr_item = [instr_name_item,instr_driver_item]
+                parentItem.appendRow(Instr_item)
+                
+                for module in _instrument.submodules:
+                    _submodule = _instrument.submodules[module]
+                    
+                    name  = _submodule.short_name
+                    driver = _submodule.__module__
+                    
+                    submodule_name_item = QtGui.QStandardItem(name)
+                    submodule_driver_item = QtGui.QStandardItem(driver)
+                    
+                    Modul_item = [submodule_name_item,submodule_driver_item]
+                    instr_name_item.appendRow(Modul_item)
+                
+                
+                
 
 
     def fill_parameter_list(self):
@@ -174,7 +191,13 @@ class stationOverview(QtWidgets.QMainWindow):
     def generate_softpanel(self):
 
         instrument_index = self.stationtree.currentIndex()
-        instrument = self.main.station.components[instrument_index.data()]#Qt.DisplayRole)
+        print(instrument_index.parent().data())
+        ## TODO improve this solution
+        try:
+            instrument = self.main.station.components[instrument_index.data()]#Qt.DisplayRole)
+        except:
+            parent_instrument =instrument_index.parent().data()
+            instrument = self.main.station.components[parent_instrument].submodules[instrument_index.data()]
         dictionary = instrument.parameters #self.native_parameters_dict[instrument.name]
         self.softpanel[instrument.name] = autoSF(instrument,dictionary) # TODO: create one instance per instruments
         
