@@ -65,6 +65,8 @@ def get_ds_from_experiment(experiment, run_id):
     ds = experiment.data_sets()[run_id]
     
     ds_timestamp_str = ds.run_timestamp() #(_run_id).run_timestamp()
+    if not ds_timestamp_str:
+        ds_timestamp_str = '1990-01-01 00:00:00'
     ds_timestamp = datetime.datetime.strptime(ds_timestamp_str,"%Y-%m-%d %H:%M:%S") 
     ds_time = ds_timestamp.strftime(_time_format_string)
     # print(ds_timestamp)
@@ -107,12 +109,12 @@ def get_parameter_dependencies(parameters):
         - ind_par_names
         - dep_par_names
     '''
-    ind_par_names = {}
-    dep_par_names = {}
-
+    ind_par_names = []
+    dep_par_names = []
+    # print(parameters)
     ## Sorting dependent and independent parameters
     for par in parameters:
-        if not par.depends_on_: # or depends_on_, which gives a string not a list
+        if not parameters[par].depends_on_: # or depends_on_, which gives a string not a list
             ind_par_names.append(par)
         else:
             dep_par_names.append(par)
@@ -125,7 +127,7 @@ def get_data_from_ds_for_param(ds,parameter_name):
     '''
     Use together with get_parameter_dependencies to clarify interdependencies in data_dict
     '''    
-    data_dict = ds.get_parameter_data[parameter_name]
+    data_dict = ds.get_parameter_data()[parameter_name]
 
     return data_dict
 

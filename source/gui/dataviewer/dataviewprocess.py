@@ -85,23 +85,21 @@ class DataProc(QtWidgets.QDialog):
 
 		
 
-		self.outCombo.currentIndexChanged.connect(self.main.combobox_callback)
-		self.pptbutton.clicked.connect(self.main.ppt_callback)
-		self.jpgbutton.clicked.connect(self.main.tojpg_callback)
+		# self.outCombo.currentIndexChanged.connect(self.main.combobox_callback)
+		# self.pptbutton.clicked.connect(self.main.ppt_callback)
+		# self.jpgbutton.clicked.connect(self.main.tojpg_callback)
 
-		self.jupyterbutton.clicked.connect(self.main.jupyter_callback)
-
-
-		self.refreshPlot.clicked.connect(self.main.refreshdata)
-
-		self.getCoord.clicked.connect(self.main.toggle_getcoord)
-		self.getLinecut.clicked.connect(self.main.toggle_linecut)
-		self.processWindow.clicked.connect(self.main.toggle_procWindow)
-
-		# self.autoWindow.clicked.connect(self.main.toggle_autoWindow)
+		# self.jupyterbutton.clicked.connect(self.main.jupyter_callback)
 
 
-		self.freezeCmap.clicked.connect(self.main.toggle_cmap)
+		# self.refreshPlot.clicked.connect(self.main.refreshdata)
+
+		# self.getCoord.clicked.connect(self.main.toggle_getcoord)
+		# self.getLinecut.clicked.connect(self.main.toggle_linecut)
+		# self.processWindow.clicked.connect(self.main.toggle_procWindow)
+
+
+		# self.freezeCmap.clicked.connect(self.main.toggle_cmap)
 
 
 		self.setWindowTitle('Data Controls')
