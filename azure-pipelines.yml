@@ -19,12 +19,17 @@ steps:
     versionSpec: '$(python.version)'
   displayName: 'Use Python $(python.version)'
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies'
+- powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+  displayName: Add conda to PATH
+
+
+- script: conda env create --quiet --file environment.yml
+  displayName: Create Anaconda environment
+
 
 - script: |
+    call activate qtNE_new_2023
     pip install pytest pytest-azurepipelines
     pytest
-  displayName: 'pytest'
+  displayName: pytest
+
