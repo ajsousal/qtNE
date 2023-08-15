@@ -30,6 +30,6 @@ steps:
 - script: |
     call activate qtNE_new_2023
     pip install pytest pytest-azurepipelines
-    pytest
+    pytest tests
   displayName: pytest
 
