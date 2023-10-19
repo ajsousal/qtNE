@@ -1,17 +1,7 @@
-import argparse
-import logging
-import os
-
-import pyqtgraph as pg
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
-from qtpy.QtWidgets import QFileDialog, QWidget
 
 import qcodes
-
-from qcodes.plots.pyqtgraph import QtPlot
-# from source.gui.helpers import data_array
-from qcodes.data import data_array
 
 
 class DataMeta(QtWidgets.QDialog):

@@ -8,21 +8,15 @@ import sys
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
-from pyqtgraph.Point import Point
 from pyqtgraph.exporters import ImageExporter
 
 
 import PyQt6.QtGui as QtGui
-# import PyQt6.QtWidgets as QtWidgets
-from PyQt6.QtWidgets import QFileDialog, QWidget, QApplication
-# import qtpy.QtGui as QtGui
+from PyQt6.QtWidgets import QFileDialog, QApplication
 import qtpy.QtWidgets as QtWidgets
-# from qtpy.QtWidgets import QFileDialog, QWidget
 
 import qcodes
 
-# from source.gui.helpers.pyqtgraph import QtPlot
-# from qcodes.plots.pyqtgraph import QtPlot
 from source.gui.helpers.pyqtgraph_helper.pyqtgraph import QtPlot
 
 
@@ -34,17 +28,10 @@ except:
     sys.path.append(pathit) # TO DO: make universal to source
     from source.gui.helpers import procstyles as procstyles
 
-# from source.measurements.data_set_tools import remove_array_clean as remove_array_clean
-# from source.measurements.data_set_tools import load_data_generic as load_data_generic
 
-from source.gui.helpers import export_tools
 from source.gui.helpers import plot_tools
-from source.gui.helpers import misc
-
 from source.tools import db_comms
 
-# from source.gui.helpers import data_set
-from qcodes.data import data_set
 
 try:
     from .dataviewmeta import DataMeta
@@ -66,10 +53,9 @@ from tempfile import gettempdir
 
 #import h5py
 
-from datetime import datetime
 
 # import debugpy
-from PyQt6.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import pyqtSignal
 
 # %% Main class
 
@@ -273,45 +259,6 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
         self.text.setText('Log files at %s' % self.data_directory)
         self.update_logs()
 
-
-
-    @staticmethod
-    def get_data_info(metadata):
-        params = []
-        try:
-            if 'loop_specs' in metadata.keys():
-                sv = metadata['loop_specs']
-
-                outputs = sv['output_id']
-                outputtxt = str(outputs).strip('[]')
-
-                sweep = sv['sweep_id']
-                try:
-                    step = sv['step_id']
-                    looptxt = str(step).strip('[]')+', '+str(sweep).strip('[]')
-                except:
-                    looptxt = str(sweep).strip('[]')
-            else:
-                outputtxt = 'No info available'
-                looptxt = 'No info available'
-
-            if 'sample' in metadata.keys():
-                sampletxt = metadata['sample']
-            else:
-                sampletxt = 'No name'
-
-            if 'comments' in metadata.keys():
-                commenttxt = metadata['comments']
-            else:
-                commenttxt = ''
-
-        except BaseException:
-            outputtxt = 'None'
-            looptxt = 'None'
-            sampletxt = 'None'
-            commenttxt = 'None'
-
-        return looptxt, outputtxt, sampletxt, commenttxt
 
 
 
@@ -800,17 +747,6 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
 
 
 
-    @staticmethod
-    def load_data(filename, tag):
-
-        if filename.endswith('.json'):
-            location = filename
-        else:
-            # qcodes datasets are found by filename, but should be loaded by directory...
-            location = os.path.split(filename)[0]
-        data = misc.load_dataset(location)
-        return data
-
     def create_thumbnail(self):
 
         location = os.path.split(self.filename)[0]
@@ -1182,10 +1118,6 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
             return x, y
         
 
-    def ppt_callback(self):
-        for fig in self.qplotss['windows']:
-            export_tools.addPPT_dataset(self.dataset, customfig=fig)
-
 
     def tojpg_callback(self):
         dirname = QFileDialog.getExistingDirectory(
@@ -1201,19 +1133,6 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
         else:
             print('No destination folder selected')
 
-
-    def jupyter_callback(self):
-
-        from source.gui.helpers import jupyter_helper
-
-        path_jupyternbs = os.path.join(self.data_directory,'jupyter_nbs')
-
-        if not os.path.isdir(path_jupyternbs):
-            os.mkdir(path_jupyternbs)
-
-        jupyter_helper.create_qcodes_nb(self.logtree.currentIndex(),self.data_directory,save_path = path_jupyternbs)
-
-        return
     
 
 # %% Run the GUI as a standalone program

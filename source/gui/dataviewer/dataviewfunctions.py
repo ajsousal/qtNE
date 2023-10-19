@@ -1,22 +1,14 @@
-import argparse
-import logging
 import os
 
-import pyqtgraph as pg
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
-from qtpy.QtWidgets import QFileDialog, QWidget
 import qtpy.QtCore as QtCore
 
-import qcodes
-
-from qcodes.plots.pyqtgraph import QtPlot
 from source.gui.helpers import procstyles as procstyles
 
 import six
 
 import json
-import sys
 
 class Function(QtWidgets.QWidget):
 	def __init__(self, name, main, signal, func, widgets=[]):

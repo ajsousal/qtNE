@@ -1,14 +1,5 @@
-import argparse
-import logging
-import os
-
-import pyqtgraph as pg
-import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
-from qtpy.QtWidgets import QFileDialog, QWidget
 
-import qcodes
-from qcodes.plots.pyqtgraph import QtPlot
 
 
 class DataProc(QtWidgets.QDialog):
@@ -75,21 +66,15 @@ class DataProc(QtWidgets.QDialog):
 		bLayout.addWidget(self.getCoord)
 		bLayout.addWidget(self.getLinecut)
 		bLayout.addWidget(self.processWindow)
-		# bLayout.addWidget(self.processCombo)
 		
 		bLayout.addWidget(self.exportLabel)
-		# bLayout.addWidget(self.pptbutton)
 		bLayout.addWidget(self.jpgbutton)
-		# bLayout.addWidget(self.jupyterbutton)
-		# bLayout.addWidget(self.autoWindow)
-
 		
 
 		self.outCombo.currentIndexChanged.connect(self.main.combobox_callback)
-		# self.pptbutton.clicked.connect(self.main.ppt_callback)
 		self.jpgbutton.clicked.connect(self.main.tojpg_callback)
 
-		# self.jupyterbutton.clicked.connect(self.main.jupyter_callback)
+	
 
 
 		self.refreshPlot.clicked.connect(self.main.refreshdata)
