@@ -317,6 +317,8 @@ def remove_bg_line(w,axis):
 
         w['ydata'] = data_sub
 
+        # print('_____out')
+        # print(w['ydata'][0])
 
     return w
     
@@ -326,11 +328,10 @@ def f_deinterlace(w,indices):
 
     z=[]
     
-    # if w['xdata'][1][0][0]!=w['xdata'][1][1][0]:
-    #     sweepback=True
-    # else:
-    #     sweepback=False
-    sweepback = False
+    if w['xdata'][1][0][0]!=w['xdata'][1][1][0]:
+        sweepback=True
+    else:
+        sweepback=False
 
     if indices=='odd':
         for ii in range(0,np.shape(w['ydata'])[0]):
@@ -368,7 +369,7 @@ def f_deinterlace(w,indices):
                         zarray.append(w['ydata'][ii-1,0])
                 if sweepback:
                     zarray=list(reversed(zarray))
-
+            # print(zarray)
             z.append(np.array(zarray))
 
         wout=np.array(z)
@@ -379,14 +380,68 @@ def f_deinterlace(w,indices):
 
 
 
+
+
+
+
+## -------------- not in use
+
+
+def f_integrate(w):
+    """Numerical integration."""
+    if w['ydata'].ndim == 1: #if 1D 
+
+        w['ydata'] = np.cumsum(w['ydata'])
+        wout = w['ydata'] / abs(w['xdata'][0][0]-w['xdata'][0][1]) * 0.0129064037 
+    else:
+
+        if w['xdata'][1][0][0]!=w['xdata'][1][1][0]:
+            sweepback=True
+        else:
+            sweepback=False
+
+        wout=np.cumsum(w['ydata'],axis=0)
+        wout=np.cumsum(wout,axis=1)
+    if sweepback:
+        for wcol in range(np.shape(w['ydata'])[0]):
+            if wcol%2!=0:
+                    wout[wcol]=np.array(list(reversed(wout[wcol])))
+
+        wout = wout / abs(w['xdata'][1][0][0]-w['xdata'][1][0][1]) * 0.0129064037 
+
+    w['label']='I.dV'
+    w['unit']= r'$\mathrm{e}^2/\mathrm{h}$'
+    
+    w['ydata'] = wout
+    return w
+
+        
+
+
+
+
+
+    
     
 ## -----------------------------------------------------------------
+def uniqueArrayName(dataset, name0):
+    """ Generate a unique name for a DataArray in a dataset """
+    ii = 0
+    name = name0
+    while name in dataset.arrays:
+        name = name0 + '_%d' % ii
+        ii = ii + 1
+        if ii > 1000:
+            raise Exception('too many arrays in DataSet')
+    return name
+
 
 
 def getEmptyWrap():
     w={'processpar': 'measured',
        'xdata': [],
        'ydata': [],
+       'zdata': [],
        'label': [],
        'unit': [],
        'name': []
@@ -394,22 +449,60 @@ def getEmptyWrap():
     return w
 
 
-def processStyle_queue(function_queue,x,y,z=[],metadata = {}):
+# def processStyle_queue(function_queue,dataa,partoprocess):
+#     meas_arr_name = dataa.default_parameter_name(partoprocess)
+#     meas_array = dataa.arrays[meas_arr_name]
+    
+#     w=getEmptyWrap()
+#     w['processpar']=partoprocess
+#     w['ydata']=meas_array.ndarray
+#     w['xdata']=list(meas_array.set_arrays)
+#     # print(type(w['xdata']) is tuple)  
+#     w['label']=getattr(meas_array,'label')
+#     w['unit']=getattr(meas_array,'unit')
+
+#     for function in function_queue:
+#         func=function_queue[function][0]
+#         dataout=func(w,**function_queue[function][1]) # executes style function, outputs dataout (wrapper)
+#         w=dataout
+
+#     # --- defines name of new data array with processed data and adds it to the original dataset 
+#     name='proc_'
+#     name = uniqueArrayName(dataa, name)
+#     # try:
+#     data_arr = data_array.DataArray(name=name, 
+#                                     label=dataout['label'],
+#                                     unit=dataout['unit'], 
+#                                     array_id=dataout['processpar']+'_'+name, 
+#                                     set_arrays=tuple(w['xdata']),
+#                                     preset_data=dataout['ydata'],
+#                                     full_name=name)
+#     # except:
+#     #     print('problem with qcodes DataArray')
+#     #     data_arr = data_array.DataArray(name=name, 
+#     #                         label=dataout['label'],
+#     #                         unit=dataout['unit'], 
+#     #                         array_id=dataout['processpar']+'_'+name, 
+#     #                         set_arrays=tuple(w['xdata']),
+#     #                         preset_data=dataout['ydata'],
+#     #                         full_name=name)
+#     dataa.add_array(data_arr)
+  
+#     return dataa
+    
+
+def processStyle_queue(function_queue,x,y,z=[]):
     # meas_arr_name = dataa.default_parameter_name(partoprocess)
     # meas_array = dataa.arrays[meas_arr_name]
     
     w=getEmptyWrap()
-    # w['processpar']=partoprocess
-    if z is None:
-        w['xdata'] = x
-        w['ydata'] = y
-    else:
-        w['xdata'].append(x)
-        w['xdata'].append(y)
-        w['ydata'] = z
-
-    w['label']= metadata['Zlabel'] if z is not None else metadata['Ylabel'] # getattr(meas_array,'label')
-    w['unit']=metadata['Zunit'] if z is not None else metadata['Yunit'] # getattr(meas_array,'unit')
+    w['processpar']=partoprocess
+    w['ydata']= y #meas_array.ndarray
+    w['xdata']= x #list(meas_array.set_arrays)
+    w['zdata']= z
+    # print(type(w['xdata']) is tuple)  
+    w['label']= self.main.Z_label if Z is not None else self.main.Y_label # getattr(meas_array,'label')
+    w['unit']=self.main.Z_unit if Z is not None else self.main.Y_unit # getattr(meas_array,'unit')
 
     for function in function_queue:
         func=function_queue[function][0]
@@ -418,6 +511,29 @@ def processStyle_queue(function_queue,x,y,z=[],metadata = {}):
 
     return w
 
+    # --- defines name of new data array with processed data and adds it to the original dataset 
+    # name='proc_'
+    # name = uniqueArrayName(dataa, name)
+    # try:
+    # data_arr = data_array.DataArray(name=name, 
+    #                                 label=dataout['label'],
+    #                                 unit=dataout['unit'], 
+    #                                 array_id=dataout['processpar']+'_'+name, 
+    #                                 set_arrays=tuple(w['xdata']),
+    #                                 preset_data=dataout['ydata'],
+    #                                 full_name=name)
+    # except:
+    #     print('problem with qcodes DataArray')
+    #     data_arr = data_array.DataArray(name=name, 
+    #                         label=dataout['label'],
+    #                         unit=dataout['unit'], 
+    #                         array_id=dataout['processpar']+'_'+name, 
+    #                         set_arrays=tuple(w['xdata']),
+    #                         preset_data=dataout['ydata'],
+    #                         full_name=name)
+    # dataa.add_array(data_arr)
+  
+    # return dataa
 
 
 ## -- support functions 

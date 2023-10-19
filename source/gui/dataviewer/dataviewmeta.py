@@ -44,7 +44,7 @@ class DataMeta(QtWidgets.QDialog):
 		metatree.setEditTriggers(
 			QtWidgets.QAbstractItemView.NoEditTriggers)
 
-		_metamodel.setHorizontalHeaderLabels(['metadata', 'value'])
+		_metamodel.setHorizontalHeaderLabels(['parameter', 'value'])
 
 		try:
 			self.main.fill_item(_metamodel, meta_dict)
@@ -53,6 +53,26 @@ class DataMeta(QtWidgets.QDialog):
 		except Exception as ex:
 			print(ex)
 
+
+	def update_meta_tabs_v2(self):
+		meta = self.main.dict_fixed
+
+		self.meta_tabs.clear()
+
+		metatree = QtWidgets.QTreeView()
+		_metamodel = QtGui.QStandardItemModel()
+		metatree.setModel(_metamodel)
+		metatree.setEditTriggers(
+			QtWidgets.QAbstractItemView.NoEditTriggers)
+		_metamodel.setHorizontalHeaderLabels(['Parameter','Value'])
+	
+		for param, value in zip(meta[list(meta.keys())[0]], meta[list(meta.keys())[1]]):
+			parent = [QtGui.QStandardItem(str(param)), QtGui.QStandardItem(str(value))]
+			_metamodel.appendRow(parent)
+		self.meta_tabs.addTab(metatree,'Fixed parameters')
+
+		return
+	
 	def update_meta_tabs(self):
 		''' Update metadata tree '''
 		meta = self.main.dataset.metadata

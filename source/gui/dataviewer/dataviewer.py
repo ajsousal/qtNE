@@ -40,9 +40,6 @@ from source.measurements.data_set_tools import load_data_generic as load_data_ge
 from source.gui.helpers import export_tools
 from source.gui.helpers import plot_tools
 from source.gui.helpers import misc
-
-from source.tools import db_comms
-
 # from source.gui.helpers import data_set
 from qcodes.data import data_set
 
@@ -185,12 +182,13 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
             QtWidgets.QAbstractItemView.NoEditTriggers)
 
         self.set_data_directory(data_directory)
-        # self.logtree.clicked.connect(lambda: self.log_callback(
-        #     self.logtree.currentIndex()))  # self.log_callback)
-        # self.logtree.selectionModel().selectionChanged.connect(
-        #     lambda: self.log_callback(self.logtree.currentIndex()))
-        # self.filterbutton.clicked.connect(
-        #     lambda: self.update_logs(filter_str=self.filtertext.text()))
+        # self.logtree.doubleClicked.connect(self.log_callback)
+        self.logtree.clicked.connect(lambda: self.log_callback(
+            self.logtree.currentIndex()))  # self.log_callback)
+        self.logtree.selectionModel().selectionChanged.connect(
+            lambda: self.log_callback(self.logtree.currentIndex()))
+        self.filterbutton.clicked.connect(
+            lambda: self.update_logs(filter_str=self.filtertext.text()))
 
         menuBar = self.menuBar()
 
@@ -204,7 +202,8 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
                         },
             '&View': {'&Metadata Viewer': self.show_metadata,
                       'Data &Control': self.show_datacontrols
-                      }
+                      },
+            '&Help': {'&Info': self.show_help}
         }
         for (k, menu) in menuDict.items():
             mb = menuBar.addMenu(k)
@@ -220,14 +219,10 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
         self.update_logs()
         self.datatag = None
 
-        self.logtree.setColumnHidden(6, True) # DatabaseDir
-        self.logtree.setColumnHidden(7, True) # Experiment
+        # self.logtree.setColumnHidden(2, True)
+        # self.logtree.setColumnHidden(3, True)
         self.show()
 
-
-        self._current_db_conn = None # active db connection
-
-        self._output_par = 'keith1_Idc1' # TODO: to be called/set from GUI
         
 
         # ----------- process data
@@ -262,10 +257,15 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
         #     self.disk_io = qcodes.DiskIO(data_directory)
         # except:
         #     self.disk_io = qcodes.data.io.DiskIO(data_directory)
-        # logging.info('DataViewer: data directory %s' % data_directory)
+        logging.info('DataViewer: data directory %s' % data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
 
-    
+    def show_help(self):
+        """ Show help dialog """
+        self.infotext = "Dataviewer and processor for .csv data files"
+        QtWidgets.QMessageBox.information(
+            self, 'qtNE dataviwer control info', self.infotext)
+
 
     def toggle_data_directory(self):
         index = (self.directory_index + 1) % len(self.data_directories)
@@ -275,13 +275,69 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
         #     self.disk_io = qcodes.DiskIO(self.data_directory)
         # except:
         #     self.disk_io = qcodes.data.io.DiskIO(self.data_directory)
-        # logging.info('DataViewer: data directory %s' % self.data_directory)
+        logging.info('DataViewer: data directory %s' % self.data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
         self.update_logs()
 
 
 
+    ## ---- MOVE to dataviewprocess.py
+    def ppt_callback(self):
+        if self.dataset is None:
+            print('no data selected')
+            return
+        for fig in self.qplotss['windows']:
+            export_tools.addPPT_dataset(self.dataset, customfig=fig)
 
+    ## ---- MOVE to dataviewprocess.py
+    def tojpg_callback(self):
+        if self.dataset is None:
+            print('no data selected')
+            return
+
+        dirname = QFileDialog.getExistingDirectory(
+            self, 'Save plots to directory...', 'C:\\')
+        if dirname:
+            for fig, index in zip(self.qplotss['windows'], range(len(self.qplotss['windows']))):
+                fname = self.selected_data_file().replace('\\', '_')+'_'+str(index)+'.jpg'
+                # fname=self.datatag.replace('\\','_')+'_'+str(index)+'.jpg'
+                if os.path.exists(os.path.join(dirname, fname)):
+                    fname = fname[:-4]+'_copy.jpg'
+                fig.save(filename=os.path.join(dirname, fname))
+        else:
+            print('No destination folder selected')
+    
+    ## ---- MOVE to dataviewprocess.py
+    def jupyter_callback(self):
+
+        from source.gui.helpers import jupyter_helper
+
+        path_jupyternbs = os.path.join(self.data_directory,'jupyter_nbs')
+
+        if not os.path.isdir(path_jupyternbs):
+            os.mkdir(path_jupyternbs)
+
+        jupyter_helper.create_qcodes_nb(self.logtree.currentIndex(),self.data_directory,save_path = path_jupyternbs)
+
+        return
+
+
+
+    ## ---- MOVE to dataviewprocess.py
+    def tojpg_tmp(self):
+        if self.dataset is None:
+            print('no data selected')
+            return
+        dirname = self.tmp_directory
+        for fig, index in zip(self.qplotss['windows'], range(len(self.qplotss['windows']))):
+            fname = self.datatag.replace('\\', '_')+'_'+str(index)+'.jpg'
+            if os.path.exists(os.path.join(dirname, fname)):
+                fname = fname[:-4]+'_copy.jpg'
+            fig.save(filename=os.path.join(dirname, fname))
+
+        return os.path.join(dirname, fname)
+
+    ## ---- MOVE to dataviewmeta.py
     @staticmethod
     def get_data_info(metadata):
         params = []
@@ -366,302 +422,217 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
             print('update logs')
             self.update_logs()
 
+    @staticmethod
+    def find_datafiles(datadir, extensions='dat', show_progress=True):
+        """ Find all datasets in a directory with a given extension """
+        if extensions is None:
+            extensions = ['dat', 'hdf5']
+        dd = []
+        for e in extensions:
+            dd += misc.findfilesR(datadir, '.*%s' %
+                                           e, show_progress=show_progress)
 
+        datafiles = sorted(dd)
+        return datafiles
 
-    def update_logs(self):
-        ''' Update the list of measurements 
-        TODO: 
-            - parallel thread with loading progress
-            - save loaded infor to local file
-    
-        '''
+    @staticmethod
+    def _filename2datetag(filename):
+        """ Parse a filename to a date tag and base filename """
+        if filename.endswith('.json'):
+            datetag = filename.split(os.sep)[-1].split('_')[0]
+            logtag = filename.split(os.sep)[-1][:-5]
+        else:
+            # other formats, assumed to be in normal form
+            datetag, logtag = filename.split(os.sep)[-3:-1]
+        return datetag, logtag
+
+    @staticmethod
+    def _get_db_runids(logs,datetag,cache_file):
+        
+        stop_index = 0 # reset index for searching db 
+        i=0
+        _db_ini=False
+        if os.path.isfile(cache_file):
+            with open(cache_file,'r') as file: #assuming that list will be reverted to make easier saving of new datafiles
+                runids_raw = file.read().split("\n")
+                runids_list = [int(x) for x in runids_raw[:len(runids_raw)-1]]
+
+                runids_number = len(runids_raw)-1
+        else: 
+            runids_list = []
+            runids_number = 0
+
+        if len(logs[datetag])==int(runids_number):
+
+            # runids_list.reverse()
+            runids_output = runids_list
+
+        else:
+            print('Updating run ids file for '+str(datetag))
+            runids_list_append=[]
+
+            unsaved_keys = [logs[datetag][key] for key in list(logs[datetag].keys())[runids_number:]]
+
+            for ju, logtag in enumerate(sorted(unsaved_keys, reverse=True)):
+                filename = logtag #logs[datetag][logtag]
+                logtag = os.path.basename(os.path.dirname(filename)) # update definition of logtag, lost when extracting keys from dictionary
+
+                # extract file from db and ruid
+                if _db_ini==False:
+                    from os.path import dirname, join
+                    qcodes.dataset.initialise_or_create_database_at(join(dirname(dirname(filename)),'db_'+datetag+'.db'))
+                    _db_ini==True
+                # print(qcodes.config.core.db_location)    
+                _found=False
+                i=0
+                while _found==False:
+                    i+=1
+                    try:
+                        run_data = qcodes.dataset.load_by_id(i)
+                    except:
+                        _found=True
+                        data_run_id=0
+                    date_db=datetime.strptime(run_data.run_timestamp(),"%Y-%m-%d %H:%M:%S")
+                    run_data_time = date_db.strftime("%H%M%S")
+                    if (run_data_time==logtag) | (run_data_time==str(int(logtag)+1)):
+                        data_run_id = run_data.run_id
+                        _found=True
+                        stop_index=i
+                    
+                runids_list_append.append(data_run_id)
+
+            runids_list.reverse()
+            runids_list_append.reverse()
+            runids_list.extend(runids_list_append)
+            runids_list.reverse()
+            runids_list.append(len(runids_list)) # appends number of files indexed
+            
+            with open(cache_file,'w') as file:
+                file.write("\n".join(map(str,runids_list)))
+
+            runids_output = runids_list
+        
+        return runids_output
+
+    def update_logs(self, filter_str=None):
+        ''' Update the list of measurements '''
         model = self._treemodel
+
+        self.datafiles = self.find_datafiles(
+            self.data_directory, self.extensions)
+        dd = self.datafiles
+
+
+        if filter_str:
+            dd = [s for s in dd if filter_str in s]
+
+        if self.verbose:
+            print('DataViewer: found %d files' % (len(dd)))
 
         model.clear()
         # model.setHorizontalHeaderLabels(
-        #     ['#','Log', 'Sample', 'location', 'filename', 'Setpoints', 'Outputs', 'Comments'])
+        #     ['Log', 'Sample', 'location', 'filename', 'Setpoints', 'Outputs', 'Comments'])
         model.setHorizontalHeaderLabels(
-            ['#','Log', 'Setpoints', 'Outputs', 'Comments', 'DatabaseDir', 'Experiment'])
+            ['#','Log', 'Sample', 'location', 'filename', 'Setpoints', 'Outputs', 'Comments'])
 
-
-        self.databases = db_comms.get_databases(self.data_directory)
-        self.pointer_ds = dict()
-
-        for db in self.databases:
-            self._current_db_conn = qcodes.dataset.connect(db) # to speedup the retrieval of data
-            experiments, exp_dates = db_comms.get_experiments_from_db(db)
-
-            print(exp_dates)
-            for experiment, expdate in zip(experiments, exp_dates):
-                parent = QtGui.QStandardItem(expdate)
-                
-                n_runs = experiment.last_counter
-                # ds = []
-                # ds_time = []
-                for _run_id in range(n_runs):
-                    
-                    _dataset, datasettime = db_comms.get_ds_from_experiment(experiment,_run_id)
-                    
-                    ds_parameters = db_comms.get_parameters_from_ds(_dataset)
-                    setpoints_names, outputs_names = db_comms.get_parameter_dependencies(ds_parameters)
-                    
-                    setpoints_names_str = ''.join(str(s)+', ' for s in setpoints_names)
-                    outputs_names_str = ''.join(str(s)+', ' for s in outputs_names)
-                    comments = '' # TODO: how to store and retrieve comments fom ds?
-
-                    item_runid = QtGui.QStandardItem(str(_run_id))
-                    item_dstime = QtGui.QStandardItem(str(datasettime))
-                    item_setp = QtGui.QStandardItem(str(setpoints_names_str))
-                    item_outp = QtGui.QStandardItem(str(outputs_names_str))
-                    item_comms = QtGui.QStandardItem(str(comments))
-                    item_dbdir = QtGui.QStandardItem(str(db))
-                    item_expid = QtGui.QStandardItem(str(experiment.exp_id))
-
-                    child = [item_runid, item_dstime, item_setp, item_outp, item_comms, item_dbdir, item_expid]
-
-                    # TODO: shows preview of data on hover
-                    # thumbloc = os.path.join(os.path.split(filename)[0], 'thumbs', 'thumb.jpg')
-                    # for item in child:
-                    #     item.setToolTip('<img src="%s", width=300>' % (thumbloc))
-                    
-                    parent.appendRow(child)
-                model.appendRow(parent)
-
-        self.logtree.setColumnWidth(0, 120)
-
-
-
-    def log_callback(self, index):
-        """ Function called when a log entry is selected """
-
-        logging.info('logCallback: index %s' % str(index))
-
-        loadinfo_dict = {}
-
-        pp = index.parent()
-        row = index.row()
-
-        run_id = index.sibling(row,0).data()
-        db_path = index.sibling(row,6).data()
-        exp_id = index.sibling(row,7).data()
-        
-        setps_str = index.sibling(row,2).data()
-        setps = [s.strip() for s in setps_str.split(',')]
-        # n_setp = len(setps)
-        outps_str = index.sibling(row,3).data()
-        outps = [s.strip() for s in outps_str.split(',')]
-
-        data_dict = self.load_data_from_db(db_path,exp_id,run_id)
-
-
-        self.update_plot_v2_redux(data_dict,setps)
-
-        # tag = index.sibling(row, 3).data()  # hidden column for PyQt6
-        # filename = index.sibling(row, 4).data()  # hidden column, for PyQt6
-        # self.filename = filename
-        # self.datatag = tag
-
-        # if tag is None:
-        #     return
-        # if self.verbose >= 2:
-        #     print('DataViewer logCallback: tag %s, filename %s' %
-        #           (tag, filename))
-        # try:
-        #     logging.debug('DataViewer: load tag %s' % tag)
-        #     data = DataViewer.load_data(filename, tag)
-        #     # print(data)
-        #     if not data:
-        #         # raise ValueError('File invalid (%s) ...' % filename)
-        #         data = load_data_generic(filename)
-        #     self.dataset = data
-
-            # self.datameta.update_meta_tabs()
-            # self.datameta.update_implicit_gates()
-            # try:
-            #     self.datameta.meta_tabs.setCurrentIndex(1)
-            # except:
-            #     pass
-
-            # data_keys = data.arrays.keys()
-
-            # looptxt, outputtxt, sampletxt, commenttxt = DataViewer.get_data_info(
-            #     data.metadata)
-            # q = index.sibling(row, 1).model()
-            # q.setData(index.sibling(row, 2), sampletxt)
-            # q.setData(index.sibling(row, 5), looptxt)
-            # q.setData(index.sibling(row, 6), outputtxt)
-            # q.setData(index.sibling(row, 7), commenttxt)
-
-            # self.reset_combo_items(data, data_keys)
-            # self.functionsqueue_callback(self.fqueue, data)
-            # self.create_thumbnail()
-            #
-            # self.sx, self.sy = self.get_datamap()
-            #
-            ##
-        # except Exception as e:
-        #     print('logCallback! error: %s' % str(e))
-        #     logging.exception(e)
-
-        return
-    
-
-    @staticmethod
-    def load_data_from_db(db_path,exp_id,run_id):
-        '''
-        Load data in a qcodes dataset
-        '''
-        db_conn = qcodes.dataset.connect(db_path)
-        exp = qcodes.dataset.load_experiment(exp_id, db_conn)
-        ds, _ = db_comms.get_ds_from_experiment(exp,run_id)
-
-        data_dict = ds.get_parameter_data()[self._output_par] # first key is (dependent) output, remaining are setpoints
-        
-        return data_dict
-
-
-    def update_plot_v2_redux(self,data_dict,setpoints):
-        
-        self.qplotss['windows'].append(QtPlot(figsize=self.qplotss['positions'][i+start][0:2],
-                                                      fig_x_position=self.qplotss['positions'][i+start][2],
-                                                      fig_y_position=self.qplotss['positions'][i+start][3], remote=False, window_title='') #self.dataproc.outCombo.itemText(i+start))))
-        
-
-    def update_plot_v2(self,data_dict,setpoints):
-        '''
-        Update data plot from data_dict retrieved from qcodes db
-        '''
-
-        if self.dataproc.outCombo.currentText() == 'All':
-            numwindows = self.dataproc.outCombo.currentIndex()
-            startplot = 0
-        else:
-            numwindows = self.dataproc.outCombo.currentIndex()+1
-            startplot = self.dataproc.outCombo.currentIndex()
-
-        try:
-            self.qplotss['positions'][numwindows]
-        except:
-            windowsneeded = numwindows-len(self.qplotss['positions'])+1
-            for kk in range(windowsneeded):
-                self.qplotss['positions'].append(self.qplotss['positions'][0])
-            # print(self.qplotss['positions'])
-
-        if len(self.qplotss['windows']) < (numwindows):
-            start = len(self.qplotss['windows'])
-            for i in range(numwindows-len(self.qplotss['windows'])):
-                self.qplotss['windows'].append(QtPlot(figsize=self.qplotss['positions'][i+start][0:2],
-                                                      fig_x_position=self.qplotss['positions'][i+start][2],
-                                                      fig_y_position=self.qplotss['positions'][i+start][3], remote=False, window_title=self.dataproc.outCombo.itemText(i+start)))
-
-        try:
-            self.data_plots
-        except:
-            self.data_plots = [[] for i in range(len(self.qplotss['windows']))]
-
-        j = 0
-        while j < numwindows:
-            j += startplot
-            if type(parameter) == str:
-                ds = parameter
-
-            else:
-                ds = parameter[j-startplot]
-
-            if not self.qplotss['windows'][j].win.isVisible():
-                self.qplotss['windows'][j].__init__(figsize=self.qplotss['positions'][j][0:2],
-                                                    fig_x_position=self.qplotss['positions'][j][2],
-                                                    fig_y_position=self.qplotss['positions'][j][3], remote=False, window_title=self.dataproc.outCombo.itemText(j))
-
-            self.qplotss['windows'][j].clear()
-
-            nanarray = ~(np.isnan(getattr(self.dataset, ds).set_arrays[0]))
-            self.nanvalues = nanarray
-
-            __array = list(getattr(self.dataset, ds).set_arrays)
-
-            if len(__array) == 1:
-            # if np.shape(getattr(self.dataset, ds).set_arrays)[0] == 1:
-
-                self.qplotss['windows'][j].add(x=getattr(self.dataset, ds).set_arrays[0][nanarray], y=getattr(self.dataset, ds).ndarray[nanarray],
-                                               xlabel=getattr(self.dataset, ds).set_arrays[0].name, ylabel=getattr(self.dataset, ds).name,
-                                               xunit=getattr(self.dataset, ds).set_arrays[0].unit, yunit=getattr(self.dataset, ds).unit)
-
-                self.dataproc.freezeCmap.setEnabled(False)
-                self.dataproc.getLinecut.setEnabled(False)
-
-            elif len(__array) == 2:
-            # elif np.shape(getattr(self.dataset, ds).set_arrays)[0] == 2:
-                self.dataproc.freezeCmap.setEnabled(True)
-                self.dataproc.getLinecut.setEnabled(True)
-
-                X = []
-                Z = []
-                Xset_array=np.tile(getattr(self.dataset, ds).set_arrays[1][0],(np.shape(getattr(self.dataset, ds).set_arrays[0])[0],1))
-                for Xx, Zz in zip(Xset_array[nanarray], getattr(self.dataset, ds).ndarray[nanarray]):
-                # for Xx, Zz in zip(getattr(self.dataset, ds).set_arrays[1][nanarray], getattr(self.dataset, ds).ndarray[nanarray]):
-                    sortinds = np.argsort(Xx)[::-1]
-                    X.append(Xx[sortinds])
-                    Z.append(Zz[sortinds])
-
-                self.Y = getattr(self.dataset, ds).set_arrays[0][nanarray]
-                self.X = X
-                self.Z = np.flip(np.rot90(Z), 0) # Z
-
-                self.qplotss['windows'][j].add(x=self.Y, y=self.X, z=self.Z,
-                                               xlabel=getattr(self.dataset, ds).set_arrays[0].name, ylabel=getattr(
-                                                   self.dataset, ds).set_arrays[1].name, zlabel=getattr(self.dataset, ds).name,
-                                               xunit=getattr(self.dataset, ds).set_arrays[0].unit, yunit=getattr(self.dataset, ds).set_arrays[1].unit, zunit=getattr(self.dataset, ds).unit)
-
-                if self.dataproc.freezeCmap.isChecked():
-                    self.qplotss['windows'][j].win.removeItem(
-                        self.qplotss['windows'][j].traces[0]['plot_object']['hist'])
-                    self.setcmap(self.qplotss['windows'][j], j)
-                    self.qplotss['windows'][j].set_cmap(
-                        self.qplotss['windows'][j].traces[0]['plot_object']['cmap'])
-
-                    self.qplotss['windows'][j].win.addItem(self.plot_hist[j])
-                    # self.gradstate=self.plot_hist.gradient.saveState()
-
-                    for kk in self.qplotss['windows'][j].win.items():
-                        if isinstance(kk, pg.ImageItem):
-                            h = kk.getHistogram()
-                            self.plot_hist[j].plot.setData(*h)
-                            self.plot_hist[j].gradient.restoreState(
-                                self.gradstate[j])
-                            # self.plot_hist.gradient.sigGradientChanged.connect(self.plot_hist.gradient.saveState)
-                            self.plot_hist[j].imageItem = weakref.ref(kk)
-                            kk.sigImageChanged.connect(
-                                self.plot_hist[j].imageChanged)
-                            kk.setLookupTable(self.plot_hist[j].getLookupTable)
-                            # self.plot_hist[j].gradientChanged()
-                            self.plot_hist[j].regionChanged()
-                            self.plot_hist[j].imageChanged(autoLevel=False)
-
-                    self.qplotss['windows'][j].update_plot()
-
+        logs = dict()
+        for _, filename in enumerate(dd):
             try:
-                self.data_plots[j] = getattr(self.dataset, ds)
-            except:
-                self.data_plots.append(getattr(self.dataset, ds))
+                datetag, logtag = self._filename2datetag(filename)
+                if datetag not in logs:
+                    logs[datetag] = dict()
+                logs[datetag][logtag] = filename
+            except Exception:
+                pass
+        self.logs = logs
 
-            j += 1
+        if self.verbose >= 2:
+            print('DataViewer: create gui elements')
 
-            self.dataproc.getCoord.setChecked(False)
-            self.dataproc.getLinecut.setChecked(False)
+        for i, datetag in enumerate(sorted(logs.keys())[::-1]):
+            if self.verbose >= 2:
+                print('DataViewer: datetag %s ' % datetag)
 
+            cache_file=os.path.join(self.data_directory,datetag,'runids_'+str(datetag)+'.txt')
+            runids_list = self._get_db_runids(logs,datetag,cache_file)
+            # print(runids_list)
+            # print(len(runids_list))
 
+            parent1 = QtGui.QStandardItem(datetag)
+            for j, logtag in enumerate(sorted(logs[datetag], reverse=True)):
+                # print(j)
+                # print(len(logs[datetag]))
+                filename = logs[datetag][logtag]
 
+                child_log = QtGui.QStandardItem(logtag)
 
-    def selected_data_file(self):
-        """ Return currently selected data file """
-        return self.datatag
-    
+                loc = '\\'.join(filename.split('\\')[:-1])
+                try:
+                    tempdata = qcodes.DataSet(loc)
+                except:
+                    tempdata = data_set.DataSet(loc)
+                tempdata.read_metadata()
+                looptxt, outputtxt, sampletxt, commenttxt = DataViewer.get_data_info(
+                    tempdata.metadata)
+
+                child_index = QtGui.QStandardItem(str(runids_list[j]))
+                child_sample = QtGui.QStandardItem(sampletxt)
+                child_loop = QtGui.QStandardItem(looptxt)
+                child_outp = QtGui.QStandardItem(outputtxt)
+                child_comment = QtGui.QStandardItem(commenttxt)
+
+                child3 = QtGui.QStandardItem(os.path.join(datetag, logtag))
+                child4 = QtGui.QStandardItem(filename)
+
+                thumbloc = os.path.join(os.path.split(
+                    filename)[0], 'thumbs', 'thumb.jpg')
+                child_log.setToolTip('<img src="%s", width=300>' % (thumbloc))
+                child_sample.setToolTip(
+                    '<img src="%s", width=300>' % (thumbloc))
+                child_loop.setToolTip('<img src="%s", width=300>' % (thumbloc))
+                child_outp.setToolTip('<img src="%s", width=300>' % (thumbloc))
+                child_comment.setToolTip(
+                    '<img src="%s", width=300>' % (thumbloc))
+                
+                # parent1.appendRow(
+                #     [child_log, child_sample, child3, child4, child_loop, child_outp, child_comment])
+                parent1.appendRow(
+                    [child_index, child_log, child_sample, child3, child4, child_loop, child_outp, child_comment])
+
+            model.appendRow(parent1)
+
+            self.logtree.setColumnWidth(0, 120)
+            # self.logtree.setColumnHidden(2, True)
+            # self.logtree.setColumnHidden(3, True)
+            self.logtree.setColumnHidden(3, True)
+            self.logtree.setColumnHidden(4, True)
+
+        if self.verbose >= 2:
+            print('DataViewer: update_logs done')
 
     def refreshdata(self):
         self.log_callback(self.logtree.currentIndex())
 
+    def fill_item(self, item, value):
+        ''' recursive population of tree structure with a dict '''
 
+        def new_item(parent, text, val=None):
+            child = QtGui.QStandardItem(text)
+            self.fill_item(child, val)
+            parent.appendRow(child)
+
+        if value is None:
+            return
+        elif isinstance(value, dict):
+            for key, val in sorted(value.items()):
+                if type(val) in [str, float, int]:
+                    child = [QtGui.QStandardItem(
+                        str(key)), QtGui.QStandardItem(str(val))]
+                    item.appendRow(child)
+                else:
+                    new_item(item, str(key), val)
+        else:
+            new_item(item, str(value))
 
     def get_plot_parameter(self):
         ''' Return parameter to be plotted '''
@@ -673,7 +644,9 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
             return self.default_parameter
         return self.dataset.default_parameter_name()
 
-
+    def selected_data_file(self):
+        """ Return currently selected data file """
+        return self.datatag
     
     ## ---- MOVE to dataviewprocess.py
     def combobox_callback(self, index):
@@ -684,7 +657,7 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
 
 
 # ----------- method do handle functions queue
-    
+
     def functionsqueue_callback(self, fqueue, data):
         self.fqueue = fqueue
         if not self._update_plot_:  # block calling of this function while updating processCombo contents
@@ -711,7 +684,61 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
 
 # -----------
 
+    def log_callback(self, index):
+        """ Function called when a log entry is selected """
 
+        logging.info('logCallback: index %s' % str(index))
+
+        pp = index.parent()
+        row = index.row()
+        tag = index.sibling(row, 3).data()  # hidden column for PyQt6
+        filename = index.sibling(row, 4).data()  # hidden column, for PyQt6
+        self.filename = filename
+        self.datatag = tag
+
+        if tag is None:
+            return
+        if self.verbose >= 2:
+            print('DataViewer logCallback: tag %s, filename %s' %
+                  (tag, filename))
+        try:
+            logging.debug('DataViewer: load tag %s' % tag)
+            data = DataViewer.load_data(filename, tag)
+            # print(data)
+            if not data:
+                # raise ValueError('File invalid (%s) ...' % filename)
+                data = load_data_generic(filename)
+            self.dataset = data
+
+            self.datameta.update_meta_tabs()
+            self.datameta.update_implicit_gates()
+            try:
+                self.datameta.meta_tabs.setCurrentIndex(1)
+            except:
+                pass
+
+            data_keys = data.arrays.keys()
+
+            looptxt, outputtxt, sampletxt, commenttxt = DataViewer.get_data_info(
+                data.metadata)
+            q = index.sibling(row, 1).model()
+            q.setData(index.sibling(row, 2), sampletxt)
+            q.setData(index.sibling(row, 5), looptxt)
+            q.setData(index.sibling(row, 6), outputtxt)
+            q.setData(index.sibling(row, 7), commenttxt)
+
+            self.reset_combo_items(data, data_keys)
+            self.functionsqueue_callback(self.fqueue, data)
+            self.create_thumbnail()
+            #
+            # self.sx, self.sy = self.get_datamap()
+            #
+            ##
+        except Exception as e:
+            print('logCallback! error: %s' % str(e))
+            logging.exception(e)
+
+        return
 
     def get_datamap(self):
 
@@ -854,8 +881,12 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
                 Xset_array=np.tile(getattr(self.dataset, ds).set_arrays[1][0],(np.shape(getattr(self.dataset, ds).set_arrays[0])[0],1))
                 for Xx, Zz in zip(Xset_array[nanarray], getattr(self.dataset, ds).ndarray[nanarray]):
                 # for Xx, Zz in zip(getattr(self.dataset, ds).set_arrays[1][nanarray], getattr(self.dataset, ds).ndarray[nanarray]):
+                    # print(getattr(self.dataset, ds).ndarray[nanarray])
                     sortinds = np.argsort(Xx)[::-1]
+                    # print(sortinds)
+                    # print(Zz)
                     X.append(Xx[sortinds])
+
                     Z.append(Zz[sortinds])
 
                 self.Y = getattr(self.dataset, ds).set_arrays[0][nanarray]

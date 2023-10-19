@@ -30,6 +30,7 @@ from source.tools import tmp_tools as tmp_tools # change this import in the futu
 
 from source.gui.dataviewer import (
             dataviewer,
+            dataviewer_new,
             dataviewmeta,
             dataviewprocess)
 
@@ -283,7 +284,8 @@ class StationGUI(QtWidgets.QMainWindow):
 
         datadir=tempdata['current_db']
 
-        self.dataviewer=dataviewer.DataViewer(data_directory = datadir)
+        # self.dataviewer=dataviewer.DataViewer(data_directory = datadir)
+        self.dataviewer=dataviewer_new.DataViewer(data_directory = datadir)
 
 
 

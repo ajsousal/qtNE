@@ -422,6 +422,82 @@ try:
                                  extranotes=extranotes,
                                  **kwargs)
         return ppt, slide
+    
+    
+
+    def addPPT_dataset_qcodes(dataset, title=None, notes=None,
+                        show=False, verbose=1, paramname='measured',
+                        printformat='fancy', customfig=None, extranotes=None, **kwargs):
+            """ Add slide based on dataset to current active Powerpoint presentation.
+
+            Args:
+                dataset (DataSet): data and metadata from DataSet added to slide.
+                customfig (QtPlot): custom QtPlot object to be added to
+                                    slide (for dataviewer).
+                notes (string): notes added to slide.
+                show (bool): shows the powerpoint application.
+                verbose (int): print additional information.
+                paramname (None or str): passed to dataset.default_parameter_array.
+                printformat (string): 'fancy' for nice formatting or 'dict'
+                                    for easy copy to python.
+            Returns:
+                ppt: PowerPoint presentation.
+                slide: PowerPoint slide.
+
+            Example:
+            -------
+            >>> notes = 'some additional information'
+            >>> addPPT_dataset(dataset,notes)
+            """
+            # if len(dataset.arrays) < 2:
+            #     raise IndexError('The dataset contains less than two data arrays')
+
+            if customfig is None:
+
+                if isinstance(paramname, str):
+                    if title is None:
+                        parameter_name = dataset.default_parameter_name(paramname=paramname)
+                        title = 'Parameter: %s' % parameter_name
+                    temp_fig = QtPlot(dataset.default_parameter_array(
+                        paramname=paramname), show_window=False)
+                else:
+                    if title is None:
+                        title = 'Parameter: %s' % (str(paramname),)
+                    for idx, parameter_name in enumerate(paramname):
+                        if idx == 0:
+                            temp_fig = QtPlot(dataset.default_parameter_array(
+                                paramname=parameter_name), show_window=False)
+                        else:
+                            temp_fig.add(dataset.default_parameter_array(
+                                paramname=parameter_name))
+
+            else:
+                temp_fig = customfig
+
+            text = 'Dataset location: %s' % dataset.location
+            if notes is None:
+                try:
+                    metastring = reshape_metadata(dataset,
+                                                printformat=printformat)
+                except Exception as ex:
+                    metastring = 'Could not read metadata: %s' % str(ex)
+                notes = 'Dataset %s metadata:\n\n%s' % (dataset.location,
+                                                        metastring)
+                scanjob = dataset.metadata.get('scanjob', None)
+                if scanjob is not None:
+                    s = pprint.pformat(scanjob)
+                    notes = 'scanjob: ' + str(s) + '\n\n' + notes
+
+                gatevalues = dataset.metadata.get('allgatevalues', None)
+                if gatevalues is not None:
+                    notes = 'gates: ' + str(gatevalues) + '\n\n' + notes
+
+            ppt, slide = addPPTslide(title=title, fig=temp_fig, subtitle=text,
+                                    notes=notes, show=show, verbose=verbose,
+                                    extranotes=extranotes,
+                                    **kwargs)
+            return ppt, slide
+
 
 except ImportError:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,

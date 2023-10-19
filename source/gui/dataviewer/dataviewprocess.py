@@ -78,28 +78,28 @@ class DataProc(QtWidgets.QDialog):
 		# bLayout.addWidget(self.processCombo)
 		
 		bLayout.addWidget(self.exportLabel)
-		bLayout.addWidget(self.pptbutton)
+		# bLayout.addWidget(self.pptbutton)
 		bLayout.addWidget(self.jpgbutton)
-		bLayout.addWidget(self.jupyterbutton)
+		# bLayout.addWidget(self.jupyterbutton)
 		# bLayout.addWidget(self.autoWindow)
 
 		
 
-		# self.outCombo.currentIndexChanged.connect(self.main.combobox_callback)
+		self.outCombo.currentIndexChanged.connect(self.main.combobox_callback)
 		# self.pptbutton.clicked.connect(self.main.ppt_callback)
-		# self.jpgbutton.clicked.connect(self.main.tojpg_callback)
+		self.jpgbutton.clicked.connect(self.main.tojpg_callback)
 
 		# self.jupyterbutton.clicked.connect(self.main.jupyter_callback)
 
 
-		# self.refreshPlot.clicked.connect(self.main.refreshdata)
+		self.refreshPlot.clicked.connect(self.main.refreshdata)
 
-		# self.getCoord.clicked.connect(self.main.toggle_getcoord)
-		# self.getLinecut.clicked.connect(self.main.toggle_linecut)
-		# self.processWindow.clicked.connect(self.main.toggle_procWindow)
+		self.getCoord.clicked.connect(self.main.toggle_getcoord)
+		self.getLinecut.clicked.connect(self.main.toggle_linecut)
+		self.processWindow.clicked.connect(self.main.toggle_procWindow)
 
 
-		# self.freezeCmap.clicked.connect(self.main.toggle_cmap)
+		self.freezeCmap.clicked.connect(self.main.toggle_cmap)
 
 
 		self.setWindowTitle('Data Controls')
