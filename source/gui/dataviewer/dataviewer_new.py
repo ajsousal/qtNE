@@ -291,51 +291,63 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
         self.pointer_ds = dict()
 
         for db in self.databases:
-            self._current_db_conn = qcodes.dataset.connect(db) # to speedup the retrieval of data
-            experiments, exp_dates = db_comms.get_experiments_from_db(db)
+            print(db)
+            if 'filelist.txt' in os.listdir(os.path.dirname(str(db))):
+                # with open('filelist.txt','r') as f:
+                # n_runs_in_list = f.read()
 
-            print(exp_dates)
-            for experiment, expdate in zip(experiments, exp_dates):
-                parent = QtGui.QStandardItem(expdate)
-                
-                n_runs = experiment.last_counter
-                # ds = []
-                # ds_time = []
-                for _run_id in range(n_runs):
+                print('here')
+            else:
+
+                self._current_db_conn = qcodes.dataset.connect(db) # to speedup the retrieval of data
+                experiments, exp_dates = db_comms.get_experiments_from_db(db)
+
+                print(exp_dates)
+                for experiment, expdate in zip(experiments, exp_dates):
+                    parent = QtGui.QStandardItem(expdate)
                     
-                    _dataset, datasettime = db_comms.get_ds_from_experiment(experiment,_run_id)
-                    
-                    ds_parameters = db_comms.get_parameters_from_ds(_dataset)
-                    setpoints_names, outputs_names = db_comms.get_parameter_dependencies(ds_parameters)
-                    
-                    setpoints_names_str = ''.join(str(s)+', ' for s in setpoints_names)
-                    outputs_names_str = ''.join(str(s)+', ' for s in outputs_names)
-                    comments = '' # TODO: how to store and retrieve comments fom ds?
+                    n_runs = experiment.last_counter
+                    # ds = []
+                    # ds_time = []
+                    for _run_id in reversed(range(n_runs)):
+                    # for _run_id in range(n_runs):    
+                        
+                        _dataset, datasettime = db_comms.get_ds_from_experiment(experiment,_run_id)
+                        
+                        ds_parameters = db_comms.get_parameters_from_ds(_dataset)
+                        setpoints_names, outputs_names = db_comms.get_parameter_dependencies(ds_parameters)
+                        
+                        setpoints_names_str = ''.join(str(s)+', ' for s in setpoints_names)
+                        outputs_names_str = ''.join(str(s)+', ' for s in outputs_names)
+                        comments = '' # TODO: how to store and retrieve comments fom ds?
 
-                    item_runid = QtGui.QStandardItem(str(_run_id))
-                    item_dstime = QtGui.QStandardItem(str(datasettime))
-                    item_setp = QtGui.QStandardItem(str(setpoints_names_str))
-                    item_outp = QtGui.QStandardItem(str(outputs_names_str))
-                    item_comms = QtGui.QStandardItem(str(comments))
-                    item_dbdir = QtGui.QStandardItem(str(db))
-                    item_expid = QtGui.QStandardItem(str(experiment.exp_id))
+                        item_runid = QtGui.QStandardItem(str(_run_id))
+                        item_dstime = QtGui.QStandardItem(str(datasettime))
+                        item_setp = QtGui.QStandardItem(str(setpoints_names_str))
+                        item_outp = QtGui.QStandardItem(str(outputs_names_str))
+                        item_comms = QtGui.QStandardItem(str(comments))
+                        item_dbdir = QtGui.QStandardItem(str(db))
+                        item_expid = QtGui.QStandardItem(str(experiment.exp_id))
 
-                    child = [item_runid, item_dstime, item_setp, item_outp, item_comms, item_dbdir, item_expid]
+                        child = [item_runid, item_dstime, item_setp, item_outp, item_comms, item_dbdir, item_expid]
 
-                
+                        with open('filelist.txt','w') as f:
+                            f.write(str(child)+'\n')
 
-                    # TODO: shows preview of data on hover
-                    # thumbloc = os.path.join(os.path.split(filename)[0], 'thumbs', 'thumb.jpg')
-                    # for item in child:
-                    #     item.setToolTip('<img src="%s", width=300>' % (thumbloc))
-                    
-                    parent.appendRow(child)
-                model.appendRow(parent)
+                        # TODO: shows preview of data on hover
+                        # thumbloc = os.path.join(os.path.split(filename)[0], 'thumbs', 'thumb.jpg')
+                        # for item in child:
+                        #     item.setToolTip('<img src="%s", width=300>' % (thumbloc))
+                        
+                        parent.appendRow(child)
+                    # parent.sortChildren(0,QtCore.Qt.DescendingOrder)
+                    model.appendRow(parent)
 
         self.logtree.setColumnWidth(0, 120)
 
         return
-    
+
+
     def filter_fixed_parameters(self,dataset,parameter):
         data_dict = dataset.to_xarray_dataarray_dict()
         parameter_array = data_dict[parameter].to_numpy()
@@ -406,9 +418,11 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
 
 
         self.dataproc.outCombo.addItem('All')
-
-        # print(self.current_outputpar)
-        ind_output = self.dataproc.outCombo.findText(self.current_outputpar[0])
+        
+        try:
+            ind_output = self.dataproc.outCombo.findText(self.current_outputpar[0])
+        except:
+            ind_output = -1
         if ind_output < 0: # didn't find the output text in outCombo
             self.dataproc.outCombo.setCurrentIndex(0)
         else:
@@ -455,7 +469,7 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
         
         return ds
 
-    def plot_it(self,x,y,z=[], window_index = 0):
+    def plot_it(self,x,y,z=None, window_index = 0):
         j = window_index
 
 
@@ -602,11 +616,11 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
                     self.X = x
                     self.Y = y
 
-                    self.Z = []
+                    self.Z = None
                     self.Z_label = ''
                     self.Z_unit = ''
 
-                    self.plot_it(x,y,widow_index = j)
+                    self.plot_it(x,y,window_index = j)
 
                 elif len(__array) == 2:
 
