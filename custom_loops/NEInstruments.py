@@ -303,10 +303,20 @@ class NEtransport(object):
 
         def create_parameter(self, dictionary):
 
+            try:
+                self.output_type = dictionary['output']
+            except:
+                self.output_type = 'value'
+
+                
             def get_reading_daq(channel, npts):
                 self.station[dictionary['component']].flush_buffer(channel)
                 self.station[dictionary['component']].start(channel)
-                reading = self.station[dictionary['component']].read_buffer_avg(channel, npts)/dictionary['gain']
+                if self.output_type == 'value':
+                    reading = self.station[dictionary['component']].read_buffer_avg(channel, npts)/dictionary['gain']
+                elif self.output_type == 'array':
+                    reading = self.station[dictionary['component']].read_buffer_array(channel, npts)/dictionary['gain']
+
                 self.station[dictionary['component']].stop(channel)
 
                 return reading
