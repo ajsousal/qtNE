@@ -8,7 +8,7 @@ import csv
 import itertools
 
 # from source.gui.helpers import data_set, data_array
-from qcodes.data import data_set, data_array
+from qcodes_loop.data import data_set, data_array
 
 
 def correctarrays(data_set=[], combined_sweep=[], combined_step=[], array_sweep=[], array_step=[], fixed_dacs=[]):

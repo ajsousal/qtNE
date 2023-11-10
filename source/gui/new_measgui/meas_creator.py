@@ -7,10 +7,10 @@ import os
 import pyqtgraph as pg
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
-from qtpy.QtWidgets import QFileDialog, QWidget
+# from qtpy.QtWidgets import QFileDialog, QWidget
 
-import qcodes
-from qcodes.plots.pyqtgraph import QtPlot
+# import qcodes
+# from qcodes.plots.pyqtgraph import QtPlot
 
 import numpy as np
 from time import sleep, perf_counter

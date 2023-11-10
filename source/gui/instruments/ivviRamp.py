@@ -10,7 +10,7 @@ import qtpy.QtWidgets as QtWidgets
 from qtpy.QtWidgets import QFileDialog, QWidget
 
 import qcodes
-from qcodes.plots.pyqtgraph import QtPlot
+from qcodes_loop.plots.pyqtgraph import QtPlot
 
 import numpy as np
 from time import sleep, perf_counter

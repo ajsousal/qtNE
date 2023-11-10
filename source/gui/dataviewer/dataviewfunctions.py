@@ -4,7 +4,7 @@ import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
 
-from source.gui.helpers import procstyles as procstyles
+from source.gui.helpers import procstyles_db as procstyles
 
 import six
 

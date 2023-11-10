@@ -8,7 +8,7 @@ from scipy import interpolate
 
 import qcodes
 # from . import data_array
-from qcodes.data import data_array
+from qcodes_loop.data import data_array
 
 ## supporting functions for data processing
 
@@ -74,23 +74,18 @@ def f_abs(w):
 
 
 
-def f_log(w,axis):
+def f_log(w):
     """The base-10 logarithm of every datapoint."""
     w['name']='logarithm'
-    print(w['xdata'])
+    
     # wout = np.log10(np.abs(w['ydata']))
-    if axis == 'y':
-        wout = np.log10(np.abs(w['ydata']),out=np.zeros_like(w['ydata']),where=(np.abs(w['ydata'])!=0))
-        w['ydata'] = wout
-        w['label']='log'+r'$_{10}$'+'(abs('+w['processpar']+'))'
-        w['unit']='nA'
-    elif axis == 'x':
-        wout = np.log10(np.abs(w['xdata']),out=np.zeros_like(w['xdata']),where=(np.abs(w['xdata'])!=0))
-        w['xdata'][0][:] = wout
-        # w['label']='log'+r'$_{10}$'+'(abs('+w['processpar']+'))'
-        # w['unit']='nA'
+    wout = np.log10(np.abs(w['ydata']),out=np.zeros_like(w['ydata']),where=(np.abs(w['ydata'])!=0))
+    w['ydata'] = wout
+    w['label']='log'+r'$_{10}$'+'(abs('+w['processpar']+'))'
+    w['unit']='nA'
     
     return w
+
 
 
 def f_xderiv(w,method,sigma):
@@ -119,15 +114,9 @@ def f_yderiv(w,method,sigma):
 
     try:
         # sigma=2    
-        print(np.ndim(w['ydata']))
         if method=='numerical':
-            if np.ndim(w['ydata'])>1:
-                wout= np.diff(w['ydata'],axis=1)#,prepend=w['ydata'][0][0])
-            else:
-                wout= np.diff(w['ydata'])#,prepend=w['ydata'][0][0])
-            
+            wout= np.diff(w['ydata'],axis=1)#,prepend=w['ydata'][0][0])
             wout=np.insert(wout,0,wout[0][0],axis=1)        
-        
         elif method=='smooth':
             wout = diffSmooth(w['ydata'], dy='x', sigma=sigma) # dy (str): direction to differentiate in; sigma (float):  parameter for gaussian filter kernel
         w['ydata'] = wout
@@ -317,6 +306,8 @@ def remove_bg_line(w,axis):
 
         w['ydata'] = data_sub
 
+        # print('_____out')
+        # print(w['ydata'][0])
 
     return w
     
@@ -326,11 +317,10 @@ def f_deinterlace(w,indices):
 
     z=[]
     
-    # if w['xdata'][1][0][0]!=w['xdata'][1][1][0]:
-    #     sweepback=True
-    # else:
-    #     sweepback=False
-    sweepback = False
+    if w['xdata'][1][0][0]!=w['xdata'][1][1][0]:
+        sweepback=True
+    else:
+        sweepback=False
 
     if indices=='odd':
         for ii in range(0,np.shape(w['ydata'])[0]):
@@ -368,7 +358,7 @@ def f_deinterlace(w,indices):
                         zarray.append(w['ydata'][ii-1,0])
                 if sweepback:
                     zarray=list(reversed(zarray))
-
+            # print(zarray)
             z.append(np.array(zarray))
 
         wout=np.array(z)
@@ -379,8 +369,61 @@ def f_deinterlace(w,indices):
 
 
 
+
+
+
+
+## -------------- not in use
+
+
+def f_integrate(w):
+    """Numerical integration."""
+    if w['ydata'].ndim == 1: #if 1D 
+
+        w['ydata'] = np.cumsum(w['ydata'])
+        wout = w['ydata'] / abs(w['xdata'][0][0]-w['xdata'][0][1]) * 0.0129064037 
+    else:
+
+        if w['xdata'][1][0][0]!=w['xdata'][1][1][0]:
+            sweepback=True
+        else:
+            sweepback=False
+
+        wout=np.cumsum(w['ydata'],axis=0)
+        wout=np.cumsum(wout,axis=1)
+    if sweepback:
+        for wcol in range(np.shape(w['ydata'])[0]):
+            if wcol%2!=0:
+                    wout[wcol]=np.array(list(reversed(wout[wcol])))
+
+        wout = wout / abs(w['xdata'][1][0][0]-w['xdata'][1][0][1]) * 0.0129064037 
+
+    w['label']='I.dV'
+    w['unit']= r'$\mathrm{e}^2/\mathrm{h}$'
+    
+    w['ydata'] = wout
+    return w
+
+        
+
+
+
+
+
+    
     
 ## -----------------------------------------------------------------
+def uniqueArrayName(dataset, name0):
+    """ Generate a unique name for a DataArray in a dataset """
+    ii = 0
+    name = name0
+    while name in dataset.arrays:
+        name = name0 + '_%d' % ii
+        ii = ii + 1
+        if ii > 1000:
+            raise Exception('too many arrays in DataSet')
+    return name
+
 
 
 def getEmptyWrap():
@@ -394,32 +437,48 @@ def getEmptyWrap():
     return w
 
 
-def processStyle_queue(function_queue,x,y,z=[],metadata = {}):
-    # meas_arr_name = dataa.default_parameter_name(partoprocess)
-    # meas_array = dataa.arrays[meas_arr_name]
+def processStyle_queue(function_queue,dataa,partoprocess):
+    meas_arr_name = dataa.default_parameter_name(partoprocess)
+    meas_array = dataa.arrays[meas_arr_name]
     
     w=getEmptyWrap()
-    # w['processpar']=partoprocess
-    if z is None:
-        w['xdata'] = x
-        w['ydata'] = y
-    else:
-        w['xdata'].append(x)
-        w['xdata'].append(y)
-        w['ydata'] = z
-
-    w['label']= metadata['Zlabel'] if z is not None else metadata['Ylabel'] # getattr(meas_array,'label')
-    w['unit']=metadata['Zunit'] if z is not None else metadata['Yunit'] # getattr(meas_array,'unit')
+    w['processpar']=partoprocess
+    w['ydata']=meas_array.ndarray
+    w['xdata']=list(meas_array.set_arrays)
+    # print(type(w['xdata']) is tuple)  
+    w['label']=getattr(meas_array,'label')
+    w['unit']=getattr(meas_array,'unit')
 
     for function in function_queue:
         func=function_queue[function][0]
         dataout=func(w,**function_queue[function][1]) # executes style function, outputs dataout (wrapper)
         w=dataout
 
-    return w
-
-
-
+    # --- defines name of new data array with processed data and adds it to the original dataset 
+    name='proc_'
+    name = uniqueArrayName(dataa, name)
+    # try:
+    data_arr = data_array.DataArray(name=name, 
+                                    label=dataout['label'],
+                                    unit=dataout['unit'], 
+                                    array_id=dataout['processpar']+'_'+name, 
+                                    set_arrays=tuple(w['xdata']),
+                                    preset_data=dataout['ydata'],
+                                    full_name=name)
+    # except:
+    #     print('problem with qcodes DataArray')
+    #     data_arr = data_array.DataArray(name=name, 
+    #                         label=dataout['label'],
+    #                         unit=dataout['unit'], 
+    #                         array_id=dataout['processpar']+'_'+name, 
+    #                         set_arrays=tuple(w['xdata']),
+    #                         preset_data=dataout['ydata'],
+    #                         full_name=name)
+    dataa.add_array(data_arr)
+  
+    return dataa
+    
+    
 ## -- support functions 
 
 
@@ -471,4 +530,177 @@ def diffSmooth(im, dy='x', sigma=2): # from qtt.utilities.tools
     else:
         raise Exception('differentiation method %s not supported' % dy)
     return imx
+
+
+# def moving_average_1d(data,window):
+    # window/=window.sum()
+    # return signal.convolve(data,window,mode='same')
+
+
+# def moving_average_2d(data,window):
+    # window/=window.sum()
+    # return signal.convolve2d(data,window,mode='same', boundary='symm')        
+    
+    
+
+
+
+# def f_xderiv(w, method='midpoint'):
+#     """Find the rate of change between every datapoint in the x-direction."""
+    
+#     if w['ydata'].ndim==1:
+#         x=w['xdata'][0]
+#         y=w['ydata']
+
+#         if method == 'midpoint':
+#             dx = np.diff(x, axis=1)
+#             ddata = np.diff(y, axis=1)
+
+#             x = x[:,:-1] + dx / 2.0
+#             y = ddata / dx
+#         elif method == '2nd order central diff':
+#             y = (y[:,2:] - y[:,:-2]) / (y[:,2:] - y[:,:-2])
+#             x = x[:,1:-1]
+
+#     else:
+#         y=w['xdata'][0]
+#         x=w['xdata'][1]
+#         z=w['ydata']
+
+
+#         # print(y)
+#         # print(z)
+
+#         if method == 'midpoint':
+#             dx = np.diff(x, axis=1)
+#             ddata = np.diff(z, axis=1)
+
+#             x = x[:,:-1] + dx / 2.0
+#             y = y[:-1]
+#             z = ddata / dx
+#         elif method == '2nd order central diff':
+#             z = (z[:,2:] - z[:,:-2]) / (x[:,2:] - x[:,:-2])
+#             x = x[:,1:-1]
+#             y = y[1:-1]
+
+#         print(w['xdata'])
+
+#         w['xdata']=(y,x)
+#         # w['xdata'][1]=x
+#         w['ydata']=z
+
+#         print(w['xdata'])
+
+#         print(np.size(y))
+#         print(np.size(x))
+#         print(np.size(z))
+#         print(np.size(w['xdata'][0]))
+#         print(np.size(w['xdata'][1]))
+#         print(np.size(w['ydata']))
+
+#     return w
+
+
+# def f_yderiv(w, method='midpoint'):
+#     """Find the rate of change between every datapoint in the y-direction."""
+    
+#     if w['ydata'].ndim==1:
+#         print('Invalid process function.')
+#     else:
+#         x=w['xdata'][0]
+#         y=w['xdata'][1]
+#         z=w['ydata']
+
+#         if method == 'midpoint':
+#             dy = np.diff(y, axis=0)
+#             ddata = np.diff(z, axis=0)
+
+#             x = x[:-1,:]
+#             y = y[:-1,:] + dy / 2.0
+#             z = ddata / dy
+#         elif method == '2nd order central diff':
+#             z = (z[2:] - z[:-2]) / (y[2:] - y[:-2])
+#             x = x[1:-1]
+#             y = y[1:-1]
+
+#         w['xdata'][0]=x
+#         w['xdata'][1]=y
+#         w['ydata']=z
+
+#     return w
+
+
+
+# def f_dderiv(w, theta=0.0, method='midpoint'):
+#     """Calculate the component of the gradient in a specific direction."""
+#     xdir, ydir = np.cos(theta), np.sin(theta)
+
+#     xcomp = w
+#     xcomp.f_xderiv(method=method)
+#     ycomp = w
+#     ycomp.f_yderiv(method=method)
+
+#     if method == 'midpoint':
+#         xvalues = xcomp['ydata'][:-1,:]
+#         yvalues = ycomp['ydata'][:,:-1]
+
+#         w['xdata'][0], w['xdata'][1], w['ydata'] = xcomp['xdata'][0][:-1,:], ycomp['xdata'][1][:,:-1], xvalues * xdir + yvalues * ydir
+#     elif method == '2nd order central diff':
+#         xvalues = xcomp['ydata'][1:-1,:]
+#         yvalues = ycomp['ydata'][:,1:-1]
+
+#         w['xdata'][0], w['xdata'][1], w['ydata'] = xcomp['xdata'][0][1:-1,:], ycomp['xdata'][1][:,1:-1], xvalues * xdir + yvalues * ydir
+
+#     return w
+
+
+
+
+
+# def f_xinterp(w, points):
+#     """Interpolate every row onto a uniformly spaced grid."""
+#     x=w['xdata'][0]
+#     y=w['xdata'][1]
+#     if not w['ydata'].ndim==1:
+#         z=w['ydata']
+
+#     xmin, xmax, ymin, ymax, _, _ = get_limits(x,y,z)
+
+#     xinterp = np.linspace(xmin, xmax, points)
+
+#     rows = z.shape[0]
+#     values = np.zeros((rows, points))
+
+#     for i in range(rows):
+#         f = interpolate.interp1d(x.ravel(), z[:,i].ravel(), bounds_error=False, fill_value=np.nan)
+#         values[i] = f(xinterp)
+
+#     y_avg = np.average(y, axis=1)[np.newaxis].T
+
+#     w['xdata']=(np.tile(xinterp, (1, points)), np.tile(y_avg,(rows,1)))
+#     w['ydata']= values
+
+#     # self.set_data(np.tile(x, (rows,1)), np.tile(y_avg, (1, points)), values)
+
+#     print(w['xdata'])
+#     print(w['ydata'])
+#     return w
+
+# def f_yinterp(w):
+#     """Interpolate every column onto a uniformly spaced grid."""
+#     xmin, xmax, ymin, ymax, _, _ = self.get_limits()
+
+#     y = np.linspace(ymin, ymax, points)[np.newaxis].T
+
+#     cols = self.z.shape[1]
+#     values = np.zeros((points, cols))
+
+#     for i in range(cols):
+#         f = interpolate.interp1d(self.y[:,i].ravel(), self.z[:,i].ravel(),
+#                                  bounds_error=False, fill_value=np.nan)
+#         values[:,i] = f(y).ravel()
+
+#     x_avg = np.average(self.x, axis=0)
+
+#     self.set_data(np.tile(x_avg, (points,1)), np.tile(y, (1,cols)), values)
 

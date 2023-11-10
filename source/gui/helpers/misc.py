@@ -1,7 +1,7 @@
 import qcodes
 # from . import json_serializer # commented on 31/05/2023
 # from . import data_set, data_array
-from qcodes.data import data_set, data_array
+from qcodes_loop.data import data_set, data_array
 from . import data_set_conversions
 
 import re
@@ -35,7 +35,7 @@ import platform
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 
-from qcodes.data.data_set import DataSet
+# from qcodes.data.data_set import DataSet
 
 try:
     from dulwich.repo import Repo, NotGitRepository
@@ -46,19 +46,19 @@ except ModuleNotFoundError:
     NotGitRepository = Exception
 
 # explicit import
-from qcodes.plots.qcmatplotlib import MatPlot
+# from qcodes.plots.qcmatplotlib import MatPlot
 
-try:
-    from qcodes.plots.pyqtgraph import QtPlot
-except BaseException:
-    pass
+# try:
+#     from qcodes.plots.pyqtgraph import QtPlot
+# except BaseException:
+#     pass
 
-from qcodes.data.data_array import DataArray
+# from qcodes.data.data_array import DataArray
 
 
 try:
     import qtpy.QtGui as QtGui
-    import qtpy.QtCore as QtCore
+    # import qtpy.QtCore as QtCore
     import qtpy.QtWidgets as QtWidgets
 except BaseException:
     pass
@@ -109,14 +109,14 @@ def load_dataset(location, io=None, verbose=0):
     except:
         formatters = [data_set.DataSet.default_formatter]
 
-    from qcodes.data.hdf5_format import HDF5FormatMetadata
-    from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
+    from qcodes_loop.data.hdf5_format import HDF5FormatMetadata
+    from qcodes_loop.data.hdf5_format_hickle import HDF5FormatHickle
     formatters += [HDF5FormatHickle(), HDF5FormatMetadata()]
 
-    from qcodes.data.hdf5_format import HDF5Format
+    from qcodes_loop.data.hdf5_format import HDF5Format
     formatters += [HDF5Format()]
 
-    from qcodes.data.gnuplot_format import GNUPlotFormat
+    from qcodes_loop.data.gnuplot_format import GNUPlotFormat
     formatters += [GNUPlotFormat()]
 
     data = None

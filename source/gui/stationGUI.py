@@ -29,8 +29,8 @@ from source.tools import json_interpreter as json_handling_db # change this impo
 from source.tools import tmp_tools as tmp_tools # change this import in the future
 
 from source.gui.dataviewer import (
-            dataviewer,
-            dataviewer_new,
+            dataviewer_db,
+            dataviewer_txt,
             dataviewmeta,
             dataviewprocess)
 
@@ -283,9 +283,16 @@ class StationGUI(QtWidgets.QMainWindow):
         tempdata=tmp_tools.read_tmp(tmp_file='tmp')
 
         datadir=tempdata['current_db']
+        
+        dataviewer_type = self.config_json['dataviewer_type']
 
-        # self.dataviewer=dataviewer.DataViewer(data_directory = datadir)
-        self.dataviewer=dataviewer_new.DataViewer(data_directory = datadir)
+        if dataviewer_type == 'txt':
+            self.dataviewer=dataviewer_txt.DataViewer(data_directory = datadir)
+        elif dataviewer_type == 'db':
+            self.dataviewer=dataviewer_db.DataViewer(data_directory = datadir)
+        else:
+            print('Dataviewer type initialization not valid. Running default mode: txt')
+            self.dataviewer=dataviewer_txt.DataViewer(data_directory = datadir)
 
 
 

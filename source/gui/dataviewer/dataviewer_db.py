@@ -21,12 +21,12 @@ from source.gui.helpers.pyqtgraph_helper.pyqtgraph import QtPlot
 
 
 try:
-    from source.gui.helpers import procstyles as procstyles
+    from source.gui.helpers import procstyles_db as procstyles
 except:
     pathit=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
     print(pathit)
     sys.path.append(pathit) # TO DO: make universal to source
-    from source.gui.helpers import procstyles as procstyles
+    from source.gui.helpers import procstyles_db as procstyles
 
 
 from source.gui.helpers import plot_tools
@@ -38,9 +38,9 @@ try:
     from .dataviewprocess import DataProc
     from .dataviewfunctions import DataFuncs
 except:
-    from dataviewmeta import DataMeta
-    from dataviewprocess import DataProc
-    from dataviewfunctions import DataFuncs
+    from source.gui.dataviewer.dataviewmeta import DataMeta
+    from source.gui.dataviewer.dataviewprocess import DataProc
+    from source.gui.dataviewer.dataviewfunctions import DataFuncs
 
 
 import pickle
@@ -376,8 +376,6 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
         # test using: currind = stationgui.dataviewer.logtree.currentIndex()
         # test using: data = stationgui.dataviewer.load_data_from_db(currind.sibling(currind.row(),5).data(),int(currind.sibling(currind.row(),6).data()),int(currind.sibling(currind.row(),0).data()))
 
-
-
         self.outps = []
         setps = []
         pars_fixed = []
@@ -418,7 +416,7 @@ class DataViewer(QtWidgets.QMainWindow): # QObject):#
 
 
         self.dataproc.outCombo.addItem('All')
-        
+
         try:
             ind_output = self.dataproc.outCombo.findText(self.current_outputpar[0])
         except:

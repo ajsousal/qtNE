@@ -35,17 +35,17 @@ except ModuleNotFoundError:
     NotGitRepository = Exception
 
 # explicit import
-from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes_loop.plots.qcmatplotlib import MatPlot
 
 try:
-    from qcodes.plots.pyqtgraph import QtPlot
+    from qcodes_loop.plots.pyqtgraph import QtPlot
 except BaseException:
     pass
 # from qcodes import DataArray
 
 from .misc import mpl2clipboard, tilefigs, mkdirc, _convert_rgb_color_to_integer, _convert_integer_to_rgb_color, reshape_metadata
 # from . import data_set
-from qcodes.data import data_set
+from qcodes_loop.data import data_set
 
 
 try:
