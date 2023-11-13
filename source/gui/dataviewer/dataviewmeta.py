@@ -2,7 +2,7 @@ import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
 import qcodes
-
+import qcodes_loop
 
 class DataMeta(QtWidgets.QDialog):
 
@@ -117,7 +117,7 @@ class DataMeta(QtWidgets.QDialog):
 
 	def fill_implicit(self,mmodel,item):
 		for it in item:
-			if isinstance(it,qcodes.data.data_array.DataArray):
+			if isinstance(it,qcodes_loop.data.data_array.DataArray):
 			# if isinstance(it,data_array.DataArray):
 				if it.array_id.find('_cbsweep')!=-1:
 					if len(it.ndarray.shape)>1:
