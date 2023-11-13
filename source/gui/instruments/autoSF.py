@@ -12,7 +12,7 @@ class autoSF(QtWidgets.QDialog):
         # self.main=parent
 
         self.instrument = instrument
-        self.instrument_dictionary = instr_dict# dictionary with native parameters of instrument
+        self.instrument_dictionary = self.instrument.parameters #instr_dict# dictionary with native parameters of instrument
 
         self.verLayout = QtWidgets.QVBoxLayout()
         # treesLayout.addWidget(self.meta_tabs)
