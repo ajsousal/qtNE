@@ -1,7 +1,7 @@
 import sys
 from PyQt6 import QtWidgets
 from functools import partial
-
+from numpy import floor
 
 class autoSF(QtWidgets.QDialog):
 
@@ -15,9 +15,11 @@ class autoSF(QtWidgets.QDialog):
         self.instrument_dictionary = self.instrument.parameters #instr_dict# dictionary with native parameters of instrument
 
         self.verLayout = QtWidgets.QVBoxLayout()
+
+        self.horLayout = QtWidgets.QHBoxLayout()
         # treesLayout.addWidget(self.meta_tabs)
 
-        self.setWindowTitle('SoftPanel')
+        self.setWindowTitle(self.instrument.full_name)
 
         # self.setLayout(self.verLayout)
         self.setGeometry(500, 660, 200, 300) # x y w h
@@ -37,11 +39,21 @@ class autoSF(QtWidgets.QDialog):
         self.buttons_get = {}
         self.buttons_set = {}
         
+        max_pars_per_col = 20
+        n_pars = len(self.instrument_dictionary)
+        n_cols = int(1 + floor(n_pars/max_pars_per_col))
+
+        self.verLayout = []
+        for i in range(n_cols):
+            self.verLayout.append(QtWidgets.QVBoxLayout())
+
+        ind_row = 0
+        ind_col = 0
+        _added_to_layout = 0
         ## add list of parameters to gui
         for key in self.instrument_dictionary:
             
-            # print(key)
-            
+
             try:
                 value = getattr(self.instrument,key).get()
             except:
@@ -79,8 +91,19 @@ class autoSF(QtWidgets.QDialog):
                 pass
             
             # print(lineLayout)
-            self.verLayout.addItem(lineLayout)
-        self.setLayout(self.verLayout)
+            self.verLayout[ind_col].addItem(lineLayout)
+            if ind_row > max_pars_per_col:
+                self.horLayout.addItem(self.verLayout[ind_col])
+                _added_to_layout = 1
+                ind_col+=1
+                ind_row = 0
+
+            ind_row+=1
+        
+        if _added_to_layout == 0:
+            self.horLayout.addItem(self.verLayout[ind_col])
+
+        self.setLayout(self.horLayout)
         
         
         ## add buttons for methods associated to instrument
