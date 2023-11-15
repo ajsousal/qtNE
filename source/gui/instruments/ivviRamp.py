@@ -22,13 +22,8 @@ from time import sleep, perf_counter
 class ivviRamp(QtWidgets.QMainWindow):
 
     def __init__(self, rampdict, parent=None):
-        """ Contstructs a simple viewer for Qcodes data.
-
-        Args:
-            data_directory (string or None): The directory to scan for experiments.
-            default_parameter (string): A name of default parameter to plot.
-            extensions (list): A list with the data file extensions to filter.
-            verbose (int): The logging verbosity level.
+        """ 
+        Support GUI for IVVI softpanel. Set/get of inter-delay and -step
         """
         super(ivviRamp, self).__init__(parent)
 

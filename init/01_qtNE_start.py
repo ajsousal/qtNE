@@ -21,8 +21,6 @@ import pickle
 import tempfile
 
 import source.tools.tmp_tools as tmp_tools
-
-from source.gui import stationGUI
             
 # from source.measurements.data_set_tools import correctarrays
 

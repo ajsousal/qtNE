@@ -5,7 +5,11 @@ from numpy import floor
 
 class autoSF(QtWidgets.QDialog):
 
-    def __init__(self, instrument = None, instr_dict=None): #, parent=None):
+    '''
+    Automatically-generated softpanel for instruments initialized in qcodes station. It lists the parameters available for the instrument, the respective value and set/get buttons
+    '''
+
+    def __init__(self, instrument = None): #, parent=None):
                 
         super(autoSF, self).__init__() #parent)
 
