@@ -36,11 +36,11 @@ from source.tools import db_comms
 try:
     from .dataviewmeta import DataMeta
     from .dataviewprocess import DataProc
-    from .dataviewfunctions import DataFuncs
+    from .dataviewfunctions_db import DataFuncs
 except:
     from source.gui.dataviewer.dataviewmeta import DataMeta
     from source.gui.dataviewer.dataviewprocess import DataProc
-    from source.gui.dataviewer.dataviewfunctions import DataFuncs
+    from source.gui.dataviewer.dataviewfunctions_db import DataFuncs
 
 
 import pickle

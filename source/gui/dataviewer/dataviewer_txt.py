@@ -46,11 +46,11 @@ from qcodes_loop.data import data_set
 try:
     from .dataviewmeta import DataMeta
     from .dataviewprocess import DataProc
-    from .dataviewfunctions import DataFuncs
+    from .dataviewfunctions_txt import DataFuncs
 except:
     from dataviewmeta import DataMeta
     from dataviewprocess import DataProc
-    from dataviewfunctions import DataFuncs
+    from dataviewfunctions_txt import DataFuncs
 
 
 import pickle
