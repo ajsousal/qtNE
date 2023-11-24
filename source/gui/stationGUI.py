@@ -255,9 +255,9 @@ class StationGUI(QtWidgets.QMainWindow):
 
         # elif str(type(self.station.components[self.actInstr])).find('Keithley_2000'):
                     # self.keithGUI=KeithGUI(self)
-                    # self.keithGUIGUI.show()
-        else: 
-            print('GUI for this instrument is not available')
+        #             # self.keithGUIGUI.show()
+        # else: 
+        #     print('GUI for this instrument is not available')
 
 
     def set_user_directories(self,username=None):
