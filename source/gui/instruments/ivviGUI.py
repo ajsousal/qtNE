@@ -24,10 +24,6 @@ from source.gui.instruments import ivviRamp
 
 class IVVIGUI(QtWidgets.QMainWindow):
 
-'''
-Custom softpanel for IVVI rack. It supports the set/get of inter-delay and -step for each DAC
-
-'''
 
     def __init__(self, parent=None):
         """ Contstructs a simple viewer for Qcodes data.
