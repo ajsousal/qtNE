@@ -2,6 +2,7 @@
 from qtpy.QtWidgets import QApplication
 import os
 import sys
+from source.gui import stationGUI
 
 with open(os.path.join(os.getcwd(),'qtNE.cfg'),'r') as cfg_file:
         cfgs=json.load(cfg_file)
