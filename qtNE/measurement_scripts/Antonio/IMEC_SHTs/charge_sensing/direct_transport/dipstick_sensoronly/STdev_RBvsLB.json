@@ -1,0 +1,98 @@
+{
+  "Sample name": "imec QBA2 - chip2",
+  "Comments": "VSD=10 mv", 
+  
+  "Instruments": { 
+
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDe"],
+			  "DAC number": [3],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["ST", "LB", "RB"],
+			  "DAC number": [12, 13, 14],
+			  "gains": [5.0, 5.0, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1e-1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} }
+				  }
+				 },
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["RB"],
+                    "sweepback": true
+                    },
+      "Step loop":{
+                    "to use": true,  	
+                    "ID": "LB"
+                  },
+				  
+	  "Class settings":{
+				  "NEtransport":{
+								  "Voltage ranges": {
+													 "VSDe": {
+															"begin": 1,
+															"end": 1,
+															"stepsize": 5},
+													 "ST": {
+															"begin": -1800,
+															"end": -1800,
+															"stepsize": 5},
+													 "RB": {
+															"begin": -600,
+															"end": -1200,
+															"stepsize": 10},
+													 "LB": {
+															"begin": -400,
+															"end": -1400,
+															"stepsize": 10}
+													}
+								}
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D"
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1}
+}
+
+  

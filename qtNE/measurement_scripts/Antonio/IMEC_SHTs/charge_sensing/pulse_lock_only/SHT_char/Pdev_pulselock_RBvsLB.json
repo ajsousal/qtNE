@@ -1,0 +1,178 @@
+{
+  "Sample name": "imec QBC3 - chip3",
+  "Comments": "QF output OFF",
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+  	  "Supporting Instruments": {
+		  "Agilent33250":{
+						"class":"NEtransport",
+						"component":"wf_pulse",
+						"initialize": true,
+						
+						"channel": "ch1",
+						"start": true,
+						"sync": "ON",
+						"init":{
+								"trigger_source": "IMM",
+								"trigger_slope": "NEG",
+								
+								"function_type": "SQU",
+								"frequency_mode": "CW",
+								"frequency": 545.0,
+								"phase": 90.0,
+								"amplitude": 0.25,
+								"amplitude_unit": "VPP",
+								"duty_cycle": 50.0,
+								"offset": 0,
+								
+								"output_polarity": "NORM",
+								"burst_mode": "N Cycle",
+								"burst_ncycles": "INF",
+								
+								"output": "ON",
+								"burst_state": "ON"}
+					}
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDe", "Pcoarse"],
+			  "DAC number": [2, 1],
+			  "gains": [0.1, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["LL", "RL", "Pfine", "LB", "RB", "C", "G1", "G2", "G3", "G4", "R"],
+			  "DAC number": [12, 13, 14, 15, 16, 4, 5, 6, 7, 8, 9],
+			  "gains": [5.0, 5.0, 0.05, 1.0, 1.0, 1.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1e-1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} }, 
+		  "SR830":{
+					"class": "NEtransport",
+					"component": "lock_pulse",
+					"parameters": ["R", "P"],
+					"labels": ["R_pulse", "Ph_pulse"],
+					"units": ["V", "deg"],
+					"init":{
+							"reference_source": "external",
+							"time_constant": 100e-3,
+							"reserve": "normal",
+							"phase": "auto"
+							}	}
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["RB"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": true,	  	
+                    "ID": ["LB"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "Voltage ranges": {
+													 "VSDe": {
+															"begin": 0.5,
+															"end": 0.5,
+															"stepsize": 10},
+													 "Pcoarse": {
+															"begin": -100,
+															"end": -100,
+															"stepsize": 3},
+													 "Pfine": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 3},
+													 "LL": {
+															"begin": -100,
+															"end": -100,
+															"stepsize": 10},
+													"RL": {
+															"begin": -100,
+															"end": -100,
+															"stepsize": 10},
+													 "LB": {
+															"begin": -550,
+															"end": -750,
+															"stepsize": 3},
+													 "RB": {
+															"begin": -550,
+															"end": -800,
+															"stepsize": 3},
+															 
+													 "C": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 5.0},
+													 "G1": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 4.0},
+													 "G2": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 10.0},
+													 "G3": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 2.0},
+													 "G4": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 4.0},
+													 "R": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 5}															
+													}
+								}
+				  
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D",
+			"integration delay": 30e-3
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

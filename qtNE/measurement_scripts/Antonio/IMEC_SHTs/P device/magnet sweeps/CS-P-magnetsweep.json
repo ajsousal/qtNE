@@ -1,0 +1,138 @@
+{
+  "Sample name": "QB16_3_4",
+  "Comments": "ST turn-on",
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								},
+				"NEmagnetic":{
+								  "location": "custom_loops.NEInstruments",
+								  "parameters needed": ["inputs", "outputs"]
+								}
+				},
+				
+  	  "Supporting Instruments": {
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDh"],
+			  "DAC number": [2],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["LL","RL","P","RB","LB"],
+			  "DAC number": [10,11,12,13,14],
+			  "gains": [5.0, 5.0, 5.0, 1.0, 1.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			},
+
+		  "MercuryiPS":{
+			  "class": "NEmagnetic",
+			  "component": "magnet",
+			  "IDs": ["B_x", "B_y", "B_z"],
+			  "init":{
+						"x_ramp_rate":0.01,
+						"y_ramp_rate":0.01,
+						"z_ramp_rate":0.02}}
+				},
+
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} }
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["B_z"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": false,	  	
+                    "ID": ["B_z"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "ranges": {
+													 "VSDh": {
+															"begin": 2.5,
+															"end": 2.5,
+															"stepsize": 0.1},
+													 "LL": {
+															"begin": -3700,
+															"end": -3700,
+															"stepsize": 20},
+													 "RL": {
+															"begin": -3700,
+															"end": -3700,
+															"stepsize": 20},
+													 "P": {
+															"begin": -970,
+															"end": -970,
+															"stepsize": 20},
+													 "RB": {
+															"begin": -562,
+															"end": -562,
+															"stepsize": 0.15},
+													 "LB": {
+															"begin": -615,
+															"end": -615,
+															"stepsize": 0.15}															
+													}
+								},
+				  "NEmagnetic": {
+								"ranges": {
+													"B_x":{
+														"begin": 0,
+														"end": 0,
+														"stepsize": 1},
+													"B_y":{
+														"begin": 0,
+														"end": 0,
+														"stepsize": 1},
+													"B_z":{
+														"begin": 0,
+														"end": 0.05,
+														"stepsize": 0.005}
+										 }
+							  }
+				  
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D",
+			"integration delay": 0
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

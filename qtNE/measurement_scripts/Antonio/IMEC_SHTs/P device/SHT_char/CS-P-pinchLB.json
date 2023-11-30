@@ -1,0 +1,113 @@
+{
+  "Sample name": "QB16_3_4",
+  "Comments": "B=0T",
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+  	  "Supporting Instruments": {
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDh"],
+			  "DAC number": [2],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["LL","RL","P","RB","LB","C"],
+			  "DAC number": [10,11,12,13,14,15],
+			  "gains": [5.0, 5.0, 5.0, 1.0, 1.0, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} }
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["LL"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": false,	  	
+                    "ID": ["LL"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "ranges": {
+													 "VSDh": {
+															"begin": -1.5,
+															"end": -1.5,
+															"stepsize": 0.1},
+													 "LL": {
+															"begin": -2450,
+															"end": -2100,
+															"stepsize": 0.5},
+													 "RL": {
+															"begin": -1550,
+															"end": -1550,
+															"stepsize": 20},
+													 "P": {
+															"begin": -1220,
+															"end": -1220,
+															"stepsize": 20},
+													 "C":{
+															"begin": 250,
+															"end": 250,
+															"stepsize": 20},
+													 "RB": {
+															"begin": -730.0,
+															"end": -730.0,
+															"npts": 80},
+													 "LB": {
+															"begin": -834.0,
+															"end": -834.0,
+															"npts": 80}
+													}
+								}
+				  
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D",
+			"integration delay": 0
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

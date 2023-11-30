@@ -1,0 +1,104 @@
+{
+  "Sample name": "B1 vs B2 2",
+  "Comments": "",
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+  	  "Supporting Instruments": {
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDe"],
+			  "DAC number": [1],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs":      ["L1", "B1", "P1", "B2"],
+			  "DAC number": [5,    6,    13,    8],
+			  "gains": [1.0, 1.0, 1.0, 1.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 0.1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} }
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["B1"  ],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": true,	  	
+                    "ID": ["B2"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "ranges": {
+													 "VSDe": {
+															"begin": 1,
+															"end": 1,
+															"stepsize": 1},
+													 "L1": {
+															"begin": 2400,
+															"end": 2400,
+															"stepsize": 10},
+													 "B1": {
+															"begin": 700, 
+															"end": 1400,
+															"stepsize":3},
+													 "P1": {
+															"begin": -2000,
+															"end": -2000,
+															"stepsize": 10},
+													 "B2": {
+															"begin": 700,
+															"end": 1400,
+															"stepsize": 3} 
+													}
+								}
+				  
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D",
+			"integration delay": 30e-3
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

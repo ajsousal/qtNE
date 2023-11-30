@@ -1,0 +1,179 @@
+{
+  "Sample name": "QBA4",
+  "Comments": "turnon",
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+  	  "Supporting Instruments": {
+	  		  "Agilent33250":{
+						"class":"NEtransport",
+						"component":"wf_pulse",
+						"channel": "ch1",
+						"start": false,
+						"sync": "OFF",
+						"init":{
+								"trigger_source": "IMM",
+								"trigger_slope": "NEG",
+								
+								"function_type": "SQU",
+								"frequency_mode": "CW",
+								"frequency": 532.0,
+								"phase": 90.0,
+								"amplitude": 0.1,
+								"amplitude_unit": "VPP",
+								"duty_cycle": 50.0,
+								"offset": 0,
+								
+								"output_polarity": "NORM",
+								"burst_mode": "N Cycle",
+								"burst_ncycles": "INF",
+								"burst_state": "ON",
+								
+								"output_polarity": "NORM",
+								"output": "ON",
+								
+								"hocus pocus": true
+								}
+					}	  
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDh", "Pcoarse"],
+			  "DAC number": [2, 1],
+			  "gains": [0.1, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs":        ["LL", "Pfine" , "LB" , "RB" , "RL" , "C" , "G1" , "G2" , "G3" , "G4" , "R"],
+			  "DAC number": [7,     8,        9,     10,    11,    12,   13,    14,    15,    16,    6],
+			  "gains":      [5.0,  0.05,      1.0,   1.0,   5.0,   1.0,  5.0,   5.0,   5.0,   5.0,   5.0],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} },
+
+  		  "SR830":{
+					"class": "NEtransport",
+					"component": "lock_pulse",
+					"parameters": ["R", "P"],
+					"labels": ["R_pulse", "Ph_pulse"],
+					"units": ["V", "deg"],
+					"init":{
+							"reference_source": "external",
+							"time_constant": 100e-3,
+							"reserve": "normal",
+							"phase": "auto"
+							}	}
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["RB"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": true,	  	
+                    "ID": ["Pcoarse"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "ranges": {
+													 "VSDh": {
+															"begin": 0.5,
+															"end": 0.5,
+															"stepsize": 0.5},
+													 "LL": {
+															"begin": -4350,
+															"end": -4350,
+															"stepsize": 10},
+													 "RL": {
+															"begin": -4350,
+															"end": -4350,
+															"stepsize": 10},
+													 "Pcoarse": {
+															"begin": -4000,
+															"end": -4300,
+															"stepsize": 2},
+													 "Pfine": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 10},
+													 "RB": {
+															"begin": -400,
+															"end": -550,
+															"stepsize": 2},
+													 "LB": {
+															"begin": -515,
+															"end": -515,
+															"stepsize": 1},
+															
+													 "C":{
+															"begin": 100,
+															"end": 100,
+															"stepsize": 20},
+													 "G1":{
+															"begin": -1200,
+															"end": -1200,
+															"stepsize": 20},
+													 "G2":{
+															"begin": -1500,
+															"end": -1500,
+															"stepsize": 20},
+													 "G3":{
+															"begin": -1500,
+															"end": -1500,
+															"stepsize": 20},
+													 "G4":{
+															"begin": -1500,
+															"end": -1500,
+															"stepsize": 20},
+													 "R":{
+															"begin": -3500,
+															"end": -3500,
+															"stepsize": 20}	
+													}
+								}
+				  
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D",
+			"integration delay": 0
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

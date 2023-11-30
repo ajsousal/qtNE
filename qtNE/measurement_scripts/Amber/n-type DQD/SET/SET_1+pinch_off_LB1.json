@@ -1,0 +1,115 @@
+{
+  "Sample name": "QBB16_6_6",
+  "Comments": "turnon_SET",
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+  	  "Supporting Instruments": {	  
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDh"],
+			  "DAC number": [1],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs":        ["ST2",  "RB2",  "LB2",  "ST1",  "RB1",  "LB1", "C"],
+			  "DAC number": [ 5  ,    6,      7,      8,    9,      10,      11],
+			  "gains":      [1.0,    1.0 ,  1.0  ,    1.0  , 1.0  , 1.0 ,     1.0],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 0.1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} }
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["RB1"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": false,	  	
+                    "ID": ["LB"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "ranges": {
+													 "VSDh": {
+															"begin": 10,
+															"end": 10,
+															"stepsize": 10},
+													 "ST2": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 10.0},	
+													 "LB2": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 10.0},	
+													 "RB2": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 10.0},
+													 "ST1": {
+															"begin": 2500,
+															"end": 2500,
+															"stepsize": 10.0},	
+													 "LB1": {
+															"begin": 2500,
+															"end": 2500,
+															"stepsize": 10.0},	
+													 "RB1": {
+															"begin": 1000,
+															"end": 0,
+															"stepsize": 10.0},
+													 "C": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 10.0}	
+													}
+								}
+				  
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D",
+			"integration delay": 0
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

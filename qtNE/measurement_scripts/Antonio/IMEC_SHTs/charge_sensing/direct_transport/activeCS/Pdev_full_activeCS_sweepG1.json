@@ -1,0 +1,156 @@
+{
+  "Sample name": "imec QBC3 - chip3",
+  "Comments": "VSD=10 mv", 
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								},
+				"CShires":{
+								  "location": "custom_loops.NEInstruments",
+								  "parameters needed":["inputs", "outputs"],
+								  "init": {
+											"ID_Is": "Idc1",
+											"ID_coarse": "P",
+											"ID_fine": "None"
+											}
+							}
+				},
+  
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDe", "Pcoarse"],
+			  "DAC number": [2, 1],
+			  "gains": [0.1, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["LL", "RL", "Pfine", "LB", "RB", "C", "G1", "G2", "G3", "G4", "R"],
+			  "DAC number": [12, 13, 14, 15, 16, 4, 5, 6, 7, 8, 9],
+			  "gains": [5.0, 5.0, 0.05, 1.0, 1.0, 1.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1e-1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} },
+		  "Ac": {
+					  "class": "CShires"
+				},
+		  "ErrCurr": {
+					  "class": "CShires"
+				},
+		  "Vfeed": {
+					  "class": "CShires"
+				}
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["G1"],
+                    "sweepback": true
+                    },
+      "Step loop":{
+                    "to use": false,	  	
+                    "ID": ["LB"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "Voltage ranges": {
+													 "VSDe": {
+															"begin": 1,
+															"end": 1,
+															"stepsize": 10},
+													 "LL": {
+															"begin": -2700,
+															"end": -2700,
+															"stepsize": 10},
+													"RL": {
+															"begin": -2700,
+															"end": -2700,
+															"stepsize": 10},
+													 "LB": {
+															"begin": -676.5,
+															"end": -676.5,
+															"stepsize": 0.2},
+													 "RB": {
+															"begin": -1671.5,
+															"end": -1671.5,
+															"stepsize": 3},
+															
+													 "C": {
+															"begin": 470,
+															"end": 450,
+															"stepsize": 2},
+													 "G1": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 0.5},
+													 "G2": {
+															"begin": -2000,
+															"end": -1300,
+															"stepsize": 5},
+													 "G3": {
+															"begin": -1100,
+															"end": -1100,
+															"stepsize": 5},
+													 "G4": {
+															"begin": -3500,
+															"end": -3500,
+															"stepsize": 5},
+													 "R": {
+															"begin": -3500,
+															"end": -3500,
+															"stepsize": 5}															
+													}
+								},
+				  
+				  "CShires": {
+								"initialize_sensor": {
+														"beta": 3e9,
+														"gamma": 8e7,
+														"V_ps0": -1442.065, 
+														"bounds": [-1600,-1100],
+														"I0": 0.046e-9,
+														"Ac": 0.15,
+														"step": 0,
+														"slope": 0
+													  }
+							  }
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_CS",
+			"outer loop":"Loop_2D"
+			},
+			
+  "Print data": false,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

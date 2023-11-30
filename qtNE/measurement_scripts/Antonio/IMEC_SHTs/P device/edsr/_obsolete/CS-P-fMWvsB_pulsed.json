@@ -1,0 +1,182 @@
+{
+  "Sample name": "QB16_3_4",
+  "Comments": "100ns MW pulse, 100ns wait",
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								},
+				"NEmagnetic":{
+								  "location": "custom_loops.NEInstruments",
+								  "parameters needed": ["inputs", "outputs"]
+								},
+				"NErf":{
+								  "location": "custom_loops.NEInstruments",
+								  "init":{
+											"pulser": "awg",
+											"mw": "psg"
+										}
+						}
+				},
+				
+  	  "Supporting Instruments": {
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDh"],
+			  "DAC number": [2],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["LL","RL","P","RB","LB"],
+			  "DAC number": [10,11,12,13,14],
+			  "gains": [5.0, 5.0, 5.0, 1.0, 1.0],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			},
+
+		  "MercuryiPS":{
+			  "class": "NEmagnetic",
+			  "component": "magnet",
+			  "coordinates": "cartesian",
+			  "IDs": ["Bx", "By", "Bz"],
+			  "init":{
+						"x_ramp_rate":0.1,
+						"y_ramp_rate":0.05,
+						"z_ramp_rate":0.1}},
+
+		  "AgilentE8257D":{
+			  "class": "NErf",
+			  "component": "psg",
+			  "IDs": ["frequency","power","phase"],
+			  "init":{
+						"RF": "ON",
+						"MOD": "ON"}}
+				},
+
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{"nplc": 1,
+										"averaging_type": "moving",
+										"averaging_count": 1}
+						}
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["frequency"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": true,	  	
+                    "ID": ["By"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "ranges": {
+													 "VSDh": {
+															"begin": 2,
+															"end": 2,
+															"stepsize": 0.1},
+													 "LL": {
+															"begin": -2770,
+															"end": -2770,
+															"stepsize": 20},
+													 "RL": {
+															"begin": -2570,
+															"end": -2570,
+															"stepsize": 20},
+													 "P": {
+															"begin": -1280,
+															"end": -1280,
+															"stepsize": 20},
+													 "RB": {
+															"begin": -612.9,
+															"end": -612.9,
+															"npts": 100},
+													 "LB": {
+															"begin": -678.6,
+															"end": -678.6,
+															"npts": 100}
+													}
+								},
+				  "NEmagnetic": {
+								"ranges": {
+													"Bx":{
+														"begin": 0.0,
+														"end": 0.0,
+														"stepsize": 0.01},
+													"By":{
+														"begin": 0.930,
+														"end": 0.920,
+														"stepsize": 0.002},
+													"Bz":{
+														"begin": 0.0,
+														"end": 0.0,
+														"stepsize": 0.02}
+										 }
+							  },
+				  "NErf": {
+								"ranges": {
+													"frequency":{
+														"begin": 17.7e9,
+														"end": 18.0e9,
+														"stepsize": 0.002e9},
+													"power":{
+														"begin": -12,
+														"end": -12,
+														"stepsize": 0.5
+													},
+													"phase":{
+														"begin": 0,
+														"end": 0,
+														"stepsize": 1
+													}
+									 },
+								"sequence_loader_referencing":{
+													"pulse":{
+																	"sequence_path": "measurement_scripts.Antonio.IMEC_SHTs.pulsing_sequences.psg_included.EDSR.EDSR_pulse_seq",
+																	"sequence_name": "sequence"},
+													"reference":{
+																	"sequence_path": "measurement_scripts.Antonio.IMEC_SHTs.pulsing_sequences.psg_included.EDSR.EDSR_reference_seq",
+																	"sequence_name": "sequence"}
+									 }
+						  }
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc_pulsing_referencing_v2",
+			"outer loop":"Loop_2D",
+			"integration delay": 0,
+			"averaging_time": 0.1
+			"referencing_condition": "NErf." 
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

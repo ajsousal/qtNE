@@ -1,0 +1,106 @@
+{
+  "Sample name": "imec QBF3",
+  "Comments": "Bias Spec.", 
+  
+  "Instruments": { 
+
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDe"],
+			  "DAC number": [3],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["LL", "RL", "P", "LB", "RB"],
+			  "DAC number": [12, 13, 14, 15, 16],
+			  "gains": [5.0, 5.0, 5.0, 5.0, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1e-1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} }
+				  }
+				 },
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["VSDe"],
+                    "sweepback": true
+                    },
+      "Step loop":{
+                    "to use": true,	  	
+                    "ID": ["P"]
+                  },
+				  
+	  "Class settings":{
+				  "NEtransport":{
+								  "Voltage ranges": {
+													 "VSDe": {
+															"begin": -100,
+															"end": 100,
+															"stepsize": 1},
+													 "P": {
+															"begin": -650,
+															"end": -1500,
+															"stepsize": 4},
+													 "LL": {
+															"begin": -3000,
+															"end": -3000,
+															"stepsize": 15},
+													"RL": {
+															"begin": -3000,
+															"end": -3000,
+															"stepsize": 15},
+													 "LB": {
+															"begin": -840,
+															"end": -840,
+															"stepsize": 4},
+													 "RB": {
+															"begin": -610,
+															"end": -610,
+															"stepsize": 3}
+													}
+								}
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D"
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1}
+}
+
+  

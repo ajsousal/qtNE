@@ -1,0 +1,80 @@
+{
+  "Sample name": "imec QBA1",
+  "Comments": "LB,RB=-1200mV", 
+  
+  "SD gates":{
+      "component": "ivvi",
+      "IDs": ["VSDe"],
+	  "DAC number": [3],
+      "gains": [0.1],
+	  "unit": "mV",	
+      "metaparameters":{
+                        "rate delay": [0.5, 0.5] } },
+
+  "DACs gates":{
+      "component": "ivvi",
+      "IDs": ["ST", "LB", "RB"],
+	  "DAC number": [14, 15, 16],
+      "gains": [5.0, 5.0, 5.0],
+	  "unit": "mV",	
+      "metaparameters":{
+                        "rate delay": [0.5, 0.5] } },
+				
+  "Outputs":{
+      "number": 1,
+      "output 1":{
+                  "component": "keith1",
+                  "name": "Idc1",
+                  "gain": 1e-1,
+				  "label": "SD current 1",
+				  "unit": "nA",
+                  "metaparameters":{} } },
+				  
+  "Experiment":{
+      "Fixed gates":{
+                      "to use": true,
+                      "IDs": ["ST"],
+                      "values": [-1600] 
+					  },
+      "Combined gates sweep":{
+                      "ID": "LB_RB",
+                      "combine": ["LB", "RB"]
+					  },
+      "Combined gates step":{
+                      "ID": "LB_RB",
+                      "combine": ["LB", "RB"]
+					  },
+      "Sweep loop":{
+                      "ID": "VSDe",
+                      "sweepback": true
+                    },
+      "Step loop":{
+                    "to use": true, 
+                    "ID": "LB_RB"
+                  },
+	  "Voltage ranges": {					  
+						 "LB": {
+								"begin": -800,
+								"end": -1300,
+								"stepsize": 2.0},
+						 "RB": {
+								"begin": -800,
+								"end": -1300,
+								"stepsize": 2.0},
+						 "VSDe": {
+								"begin": -50,
+								"end": 50,
+								"stepsize": 0.2}
+						}
+				  },
+  "Loops": {"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D"
+			},
+  "Print data": true,
+  "Data saving":{
+			"rate": 0.01}
+}
+
+  

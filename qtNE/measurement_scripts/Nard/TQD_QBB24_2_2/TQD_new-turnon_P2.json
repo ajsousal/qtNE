@@ -1,0 +1,139 @@
+{
+  "Sample name": "QBB24_2_2_MMA",
+  "Comments": "turnon",
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+  	  "Supporting Instruments": {	  
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDh"],
+			  "DAC number": [2],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs":        ["P1","P2","P3","B1","B2","B3","B4","CT","CB","STL","STR","RBL","RBR"],
+			  "DAC number": [4,    6,   8,   3,   5,   7,   9,   10,  11,  13,   15,   14,   16],
+			  "gains":      [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1.0, 1.0, 1.0,  1.0,  1.0,  1.0],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 0.1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} }
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["P2"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": false,	  	
+                    "ID": ["LB"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "ranges": {
+													 "VSDh": {
+															"begin": 2,
+															"end": 2,
+															"stepsize": 10},
+													 "P1": {
+															"begin": 2000,
+															"end": 2000,
+															"stepsize": 10.0},	
+													 "P2": {
+															"begin": 0,
+															"end": 2500,
+															"stepsize": 10.0},	
+													 "P3": {
+															"begin": 0,
+															"end": 0,
+															"stepsize": 10.0},															
+													 "B1": {
+															"begin": -1000,
+															"end": -1000,
+															"stepsize": 10.0},	
+													 "B2": {
+															"begin": -400,
+															"end": -400,
+															"stepsize": 10.0},	
+													 "B3": {
+															"begin": -1000,
+															"end": -1000,
+															"stepsize": 10.0},	
+													 "B4": {
+															"begin": -1000,
+															"end": -1000,
+															"stepsize": 10.0},	
+													 "STL": {
+															"begin": -2000,
+															"end": -2000,
+															"stepsize": 10.0},
+													 "STR": {
+															"begin": -2000,
+															"end": -2000,
+															"stepsize": 10.0},
+													 "RBL": {
+															"begin": -2000,
+															"end": -2000,
+															"stepsize": 10.0},
+													 "RBR": {
+															"begin": -2000,
+															"end": -2000,
+															"stepsize": 10.0},
+													 "CT": {
+															"begin": -200,
+															"end": -200,
+															"stepsize": 10.0},
+													 "CB": {
+															"begin": -200,
+															"end": -200,
+															"stepsize": 10.0}
+													}
+								}
+				  
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D",
+			"integration delay": 0
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

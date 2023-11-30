@@ -1,0 +1,200 @@
+{
+  "Sample name": "QB16_3_4",
+  "Comments": "referencing, off-resonance",
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								},
+				"NEmagnetic":{
+								  "location": "custom_loops.NEInstruments",
+								  "parameters needed": ["inputs", "outputs"]
+								},
+				"NErf":{
+								  "location": "custom_loops.NEInstruments",
+								  "init":{
+											"pulser": "awg",
+											"mw": "psg"
+										}
+						}
+				},
+				
+  	  "Supporting Instruments": {
+
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDh"],
+			  "DAC number": [2],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["LL","RL","P","RB","LB"],
+			  "DAC number": [10,11,12,13,14],
+			  "gains": [5.0, 5.0, 5.0, 1.0, 1.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			},
+
+		  "MercuryiPS":{
+			  "class": "NEmagnetic",
+			  "component": "magnet",
+			  "coordinates": "cartesian",
+			  "IDs": ["Bx", "By", "Bz"],
+			  "init":{
+						"x_ramp_rate":0.1,
+						"y_ramp_rate":0.1,
+						"z_ramp_rate":0.1}},
+
+		  "AgilentE8257D":{
+			  "class": "NErf",
+			  "component": "psg",
+			  "IDs": ["frequency","power","phase"],
+			  "init":{
+						"RF": "ON",
+						"MOD": "ON"}},
+						
+		  "AWG5014":{
+			  "class": "NErf",
+			  "component": "awg",
+			  "IDs":["tburst"],
+			  "labels": ["Burst time"],
+			  "units": ["s"],
+			  "init":{}}			
+						
+				},
+
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{
+										"nplc": 1,
+										"averaging_type": "repeat",
+										"averaging_count": 1} 
+						}
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["power"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": true,	  	
+                    "ID": ["tburst"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "ranges": {
+													 "VSDh": {
+															"begin": 2,
+															"end": 2,
+															"stepsize": 0.1},
+													 "LL": {
+															"begin": -2770,
+															"end": -2770,
+															"stepsize": 20},
+													 "RL": {
+															"begin": -2570,
+															"end": -2570,
+															"stepsize": 20},
+													 "P": {
+															"begin": -1280,
+															"end": -1280,
+															"stepsize": 20},
+													 "RB": {
+															"begin": -613.0,
+															"end": -613.0,
+															"npts": 100},
+													 "LB": {
+															"begin": -677.4,
+															"end": -677.4,
+															"npts": 100}
+													}
+								},
+				  "NEmagnetic": {
+								"ranges": {
+													"Bx":{
+														"begin": 0.0,
+														"end": 0.0,
+														"stepsize": 0.01},
+													"By":{
+														"begin": 0.920,
+														"end": 0.920,
+														"stepsize": 0.002},
+													"Bz":{
+														"begin": 0.0,
+														"end": 0.0,
+														"stepsize": 0.02}
+										 }
+							  },
+				  "NErf": {
+								"ranges": {
+													"frequency":{
+														"begin": 17.758e9,
+														"end": 17.758e9,
+														"stepsize": 0.002e9},
+													"power":{
+														"begin": -12,
+														"end": -2,
+														"stepsize": 0.3
+													},
+													"phase":{
+														"begin": 0,
+														"end": 0,
+														"stepsize": 1
+													},
+													"tburst":{
+														"begin": 70e-9,
+														"end": 180e-9,
+														"stepsize": 5e-9}
+									 },
+									 "sequence_loader":{
+														"sequence_path": "measurement_scripts.Antonio.IMEC_SHTs.pulsing_sequences.Rabi_seq",
+														"sequence_name": "sequence"
+														}
+						  }
+						}
+				},
+
+  "Averaging":{
+				"averaging_time": 1.0,
+				"integration_delay": 0.1,
+				"pre_command": "NErf.mw.on()",
+				"referencing_command": "NErf.mw.off()",
+				"post_command": ""
+			  },
+
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc_referencing",
+			"outer loop":"Loop_2D_pulsing"
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}

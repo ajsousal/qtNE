@@ -1,0 +1,99 @@
+{
+  "Sample name": "imec QBD3",
+  "Comments": "VSD=10 mv", 
+  
+  "Instruments": { 
+
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								}
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDe"],
+			  "DAC number": [3],
+			  "gains": [0.1],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5] } 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["P", "L", "LB", "RB"],
+			  "DAC number": [13, 14, 15, 16],
+			  "gains": [5.0, 5.0, 5.0, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{
+								"rate delay": [0.5, 0.5] } 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 1e-1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{} }
+				  },
+
+  "Experiment":{
+											
+      "Sweep loop":{
+                    "ID": ["LB", "RB"],
+                    "sweepback": true
+                    },
+      "Step loop":{
+                    "to use": true,	  	
+                    "ID": "P"
+                  },
+				  
+	  "Class settings":{
+				  "NEtransport":{
+								  "Voltage ranges": {
+													 "VSDe": {
+															"begin": 1,
+															"end": 1,
+															"stepsize": 10},
+													 "P": {
+															"begin": -800,
+															"end": -2400,
+															"stepsize": 7},
+													 "L": {
+															"begin": -2000,
+															"end": -2000,
+															"stepsize": 10},
+													 "LB": {
+															"begin": -600,
+															"end": -800,
+															"stepsize": 5},
+													 "RB": {
+															"begin": -600,
+															"end": -800,
+															"stepsize": 5}
+													}
+								}
+						}  
+				},
+				  
+  "Loops": {"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_Idc",
+			"outer loop":"Loop_2D"
+			},
+			
+  "Print data": true,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 0.01}
+}
+
+  

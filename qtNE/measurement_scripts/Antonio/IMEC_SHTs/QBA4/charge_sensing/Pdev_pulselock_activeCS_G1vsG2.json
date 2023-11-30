@@ -1,0 +1,203 @@
+{
+  "Sample name": "QBA4",
+  "Comments": "QF output OFF", 
+  
+  "Instruments": { 
+  
+	  "Classes":{
+				"NEtransport":{
+								  "location": "custom_loops.NEInstruments"
+								},
+				"CShires":{
+								  "location": "custom_loops.NEInstruments",
+								  "init": {
+											"ID_Is": "Idc1",
+											"ID_coarse": "Pcoarse",
+											"ID_fine": "Pfine"
+											}
+							}
+				},
+				
+  	  "Supporting Instruments": {
+	  		  "Agilent33250":{
+						"class":"NEtransport",
+						"component":"wf_pulse",
+						"channel": "ch1",
+						"start": false,
+						"sync": "ON",
+						"init":{
+								"trigger_source": "IMM",
+								"trigger_slope": "NEG",
+								
+								"function_type": "SQU",
+								"frequency_mode": "CW",
+								"frequency": 232.0,
+								"phase": 90.0,
+								"amplitude": 0.6,
+								"amplitude_unit": "VPP",
+								"duty_cycle": 50.0,
+								"offset": 0,
+								
+								"output_polarity": "NORM",
+								"burst_mode": "N Cycle",
+								"burst_ncycles": "INF",
+								"burst_state": "ON",
+								
+								"output_polarity": "NORM",
+								"output": "ON",
+								
+								"hocus pocus": true
+								}
+					}
+				},
+				
+	  "Inputs": {
+		  "S3b":{	  
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs": ["VSDh", "Pcoarse"],
+			  "DAC number": [2, 1],
+			  "gains": [0.1, 5.0],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			},
+
+		  "S2d":{
+			  "class": "NEtransport",
+			  "component": "ivvi",
+			  "IDs":        ["LL", "Pfine" , "LB" , "RB" , "RL" , "C" , "G1" , "G2" , "G3" , "G4" , "R"],
+			  "DAC number": [7,     8,        9,     10,    11,    12,   13,    14,    15,    16,    6],
+			  "gains":      [5.0,  0.05,      1.0,   1.0,   5.0,   1.0,  5.0,   5.0,   5.0,   5.0,   5.0],
+			  "unit": "mV",
+			  "metaparameters":{} 
+			} 
+				},
+					
+	  "Outputs":{
+		  "Keithley4200":{
+					  "class": "NEtransport",
+					  "component": "keith1",
+					  "name": "Idc1",
+					  "gain": 0.1,
+					  "label": "SD current", 
+					  "unit": "nA",
+					  "metaparameters":{"nplc": 1,
+										"averaging_type": "repeat",
+										"averaging_count": 1} },
+
+  		  "SR830":{
+					"class": "NEtransport",
+					"component": "lock_pulse",
+					"parameters": ["R", "P"],
+					"labels": ["R_pulse", "Ph_pulse"],
+					"units": ["V", "deg"],
+					"init":{
+							"reference_source": "external",
+							"time_constant": 10e-3,
+							"reserve": "normal",
+							"phase": "auto"
+							}	},
+		  "Ac": {
+					  "class": "CShires"
+				},
+		  "ErrCurr": {
+					  "class": "CShires"
+				},
+		  "Vfeed": {
+					  "class": "CShires"
+				}
+				  }},
+
+  "Experiment":{
+											
+      "Sweep loop":{
+					"ID": ["G2"],
+                    "sweepback": false
+                    },
+      "Step loop":{
+                    "to use": true,	  	
+                    "ID": ["G1"]
+                  },
+				  
+	  
+	  "Class settings":{
+				  "NEtransport":{
+								  "ranges": {
+													 "VSDh": {
+															"begin": 0.7,
+															"end": 0.7,
+															"stepsize": 10},
+													 "LL": {
+															"begin": -4350,
+															"end": -4350,
+															"stepsize": 10},
+													 "RL": {
+															"begin": -4350,
+															"end": -4350,
+															"stepsize": 10},
+													 "RB": {
+															"begin": -480.0,
+															"end": -480.0,
+															"stepsize": 2},
+													 "LB": {
+															"begin": -580,
+															"end": -580,
+															"stepsize": 1},
+															 
+													 "C":{
+															"begin": 0,
+															"end": 0,
+															"stepsize": 20},
+													 "G1":{
+															"begin": -800,
+															"end": -200,
+															"stepsize": 4},
+													 "G2":{
+															"begin": -1500,
+															"end": -700,
+															"stepsize": 2},
+													 "G3":{
+															"begin": -1700,
+															"end": -1700,
+															"stepsize": 4},
+													 "G4":{
+															"begin": -1700,
+															"end": -1700,
+															"stepsize": 20},
+													 "R":{
+															"begin": -4000,
+															"end": -4000,
+															"stepsize": 20}														
+													}
+								},
+				  
+				  "CShires": {
+								"initialize_sensor": {
+														"beta": 10e9,
+														"gamma": 0.5e9,
+														"V_ps0": -4000.0,
+														"bounds": [-4300,-3500],
+														"I0": 0.1e-9,
+														"Ac": 0.15,
+														"step": -1,
+														"slope": 0.0
+													  }
+							  }
+						}
+				},
+				  
+  "Loops": {
+			"use qcodes": true,
+			"location": "custom_loops.NELoops",
+			"class": "NELoops",
+			"inner loop":"Loop_CSDualLock",
+			"outer loop":"Loop_2D",
+			"subscriber delay": 0.0,
+			"integration delay": 200e-3
+			},
+			
+  "Print data": false,
+  "Data saving":{
+			"use datahandler": true,
+			"rate": 1.0}
+}
