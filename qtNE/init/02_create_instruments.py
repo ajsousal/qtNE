@@ -15,9 +15,11 @@ station = qcodes.Station()
 
 
 station.load_config_file('init\\station_config.yml')
-station.load_instrument('ivvi')
-station.load_instrument('keith1')
-station.load_instrument('mokuscope')
+station.load_instrument('dummy')
+# station.load_instrument('digitizer')
+# station.load_instrument('ivvi')
+# station.load_instrument('keith1')
+# station.load_instrument('mokuscope')
 
 # initialize and run VirtualDAC separately
 # exec(open('init\\ivvi_ini_pars.py').read())

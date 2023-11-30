@@ -1,0 +1,47 @@
+instruments:
+  ivvi:
+    type: qcodes_contrib_drivers.drivers.QuTech.IVVI.IVVI
+    address: COM3
+    init:
+      numdacs: 16
+      polarity: ['BIP', 'BIP', 'BIP', 'POS']
+      use_locks: false
+      dac_step: 1
+      dac_delay: 0.1
+      
+  keith1:
+    type: qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley2000
+    address: GPIB0::18::INSTR
+    
+  mokuscope:
+    type: custom_drivers.MokuPro.MokuScope
+    address: '[fe80::7269:79ff:feb0:74c]'
+  
+  digitzer:
+    type: custom_drivers.Keysight_M3102A
+    chassis: 1
+    slot: 5
+    init: 
+      acquisition: DAQ # FPGA
+      FPGAconfig:
+        bitstream_dir: 'C:\\Users\\TritonUser\\Documents\\Keysight\\PathWave FPGA\\qbit_processing\\qbit_processing.build\\qbit_processing_impl_2023-06-01_10_01_52\\bitfiles'
+        bitstream_file: 'qbit_processing.k7z'
+        config_register: 'Register_Bank'
+        config:
+          nDecim: 12
+      channelInputConfig:
+        fullScale: 4
+        impedance: 1
+        coupling: 0
+      DAQconfig:
+        pointsPerCycle: 1000
+        nCycles: 1
+        triggerDelay: 0
+        triggerMode: 0
+      triggerIOconfig:
+        direction: 1
+      DAQdigitalTriggerConfig:
+        triggerSource: 0
+        triggerBehavior: 'TRIG_RISE'
+     
+   

@@ -1,0 +1,81 @@
+instruments:
+  digitizer:
+    type: custom_drivers.Keysight_M3102A.Keysight_M3102A
+    init: 
+      label: 'Idc'
+      chassis: 1
+      slot: 5
+      active_channels: [1]
+      use_fpga: True # FPGA
+      acquisition: DAQ
+      gain: 1
+      FPGAconfig:
+        bitstream_dir: 'C:\\Users\\TritonUser\\Documents\\Keysight\\PathWave FPGA\\qbit_processing\\qbit_processing.build\\qbit_processing_impl_2023-06-01_10_01_52\\bitfiles'
+        bitstream_file: 'qbit_processing.k7z'
+        active_registers: ['Register_Bank']
+        registers_inputs:
+          Register_Bank:
+            nDecim: 12
+      channelInputConfig:
+        fullScale: 4
+        impedance: 1
+        coupling: 0
+      DAQconfig:
+        pointsPerCycle: 1000
+        nCycles: 1
+        triggerDelay: 0
+        triggerMode: 0
+      triggerIOconfig:
+        direction: 1
+      DAQdigitalTriggerConfig:
+        triggerSource: 0
+        triggerBehavior: 'TRIG_RISE'
+
+  dummy:
+    type: custom_drivers.dummy_instrument.Dummy
+    init:
+      gates: ['dac1', 'dac2']
+      stuff_1: 12
+      stuff_2: 99
+
+  # ivvi:
+  #   type: qcodes_contrib_drivers.drivers.QuTech.IVVI.IVVI
+  #   address: COM3
+  #   init:
+  #     numdacs: 16
+  #     polarity: ['BIP', 'BIP', 'BIP', 'POS']
+  #     use_locks: false
+  #     dac_step: 1
+  #     dac_delay: 0.1
+      
+  # keith1:
+  #   type: qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley2000
+  #   address: GPIB0::18::INSTR
+    
+  # mokuscope:
+  #   type: custom_drivers.MokuPro.MokuScope
+    # address: '[fe80::7269:79ff:feb0:74c]'
+  
+  # virtual_ivvi:
+    # type: custom_drivers.IVVI_gates.VirtualDAC
+    # init:
+        # instruments: [station.ivvi]
+        # gate_map: 
+            # VSDe: (0,1,0.1)
+            # STR: (0,16,1)
+            # STL: (0,15,1)
+            # LBL: (0,3,1)
+            # RBL: (0,2,1)
+            # RBR: (0,12,1)
+            # LBR: (0,11,1)
+            # B1: (0,10,1)
+            # P1: (0,9,1)
+            # B2: (0,8,1)
+            # P2: (0,7,1)
+            # B3: (0,6,1)
+            # P3: (0,5,1)
+            # B4: (0,4,1)
+            # CT: (0,14,1)
+            # CB: (0,13,1)
+     
+   
